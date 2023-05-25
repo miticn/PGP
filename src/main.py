@@ -20,5 +20,6 @@ def main():
     hash2 = sha.getHash(b"test")
     print(key.verify(hash2, signature))
     print(key.verify(hash, signature))
+
 if __name__ == "__main__":
     main()
