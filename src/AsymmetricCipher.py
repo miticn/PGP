@@ -46,7 +46,8 @@ class RSACipher(AsymmetricCipher):
         return signature
 
 class ElGamalDSACipher(AsymmetricCipher):
-
+    #DSA is for signing and verification only
+    #ElGamal is for encryption and decryption only
     @staticmethod
     def encrypt(plaintext, public_key):
         pass

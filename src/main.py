@@ -7,7 +7,7 @@ from hash import SHA1Wrapper
 def main():
     timestamp = datetime.now()
     rsa_key = RSA.generate(1024)
-    key = PrivateKeyWrapper(timestamp, 123, rsa_key, "Peter", "example@example.com", RSACipher())
+    key = PrivateKeyWrapper(timestamp, rsa_key, "Peter", "example@example.com", RSACipher())
     Message = b"Hello World"
     encrypted = key.encrypt(Message)
     print(encrypted)
