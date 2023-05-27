@@ -12,10 +12,11 @@ class KeyringPR:
         self._keys.append(key)
 
     def getKeyById(self, keyID):
-        if keyID >= 0 and keyID < len(self._keys):
-            return self._keys[keyID]
-        else:
-            return None
+        for key in self._keys:
+            if keyID == key.getKeyId():
+                return key
+        
+        return None
     
     def serialize(self):
         return pickle.dumps(self)
@@ -29,10 +30,11 @@ class KeyringPU:
         self._keys.append(key)
 
     def getKeyById(self, keyID):
-        if keyID >= 0 and keyID < len(self._keys):
-            return self._keys[keyID]
-        else:
-            return None
+        for key in self._keys:
+            if keyID == key.getKeyId():
+                return key
+        
+        return None
     
     def serialize(self):
         return pickle.dumps(self)
