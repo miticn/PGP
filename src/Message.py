@@ -3,28 +3,101 @@ import time
 import zlib
 
 from Crypto.PublicKey import RSA, ElGamal, DSA
-from AsymmetricCipher import RSACipher
+from AsymmetricCipher import RSACipher, codeToAsymmetricCipher
+from SymmetricCipher import AESCipher, TripleDES, codeToSymmetricCipher
 from Key import PrivateKeyWrapper
 from hash import SHA1Wrapper
 
 class Message():
-    def __init__(self):
-        pass
+    message = None
+    filename = None
+    timestamp = None
+
+    loadedBytes = None
+    zipped = False
+    signed = False
+    encrypted = False
+    base64 = False
+
+    def __init__(self, arg1:bytes, arg2 : bytes = None):
+        if arg2 is None:
+            self.__initLoadMsg__(arg1)
+        else:
+            self.__initNewMSG__(arg1, arg2)
+
+    def __initNewMSG__(self, message: bytes, filename: bytes):
+        self.message = message
+        self.filename = filename
+        timestamp = int(time.time())
+        self.timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
+    
+    def __initLoadMsg__(self, loadedBytes: bytes):
+        self.loadedBytes = loadedBytes
+        self.__loadMessage()
+
+    def __loadMessage(self):
+        if self.loadedBytes is None:
+            return
+        if self.base64:
+            self.loadedBytes = self.radix64Decode(self.loadedBytes)
+        if self.zipped:
+            self.loadedBytes = self.decompressMessage(self.loadedBytes)
+        if self.encrypted:
+            pass 
+        if self.loadedBytes[0:6] == b'signed':
+            print("signed")
+            self.signed = True
+            print(self.verifyMessage(None))
+
+
+        self.filename = self.loadedBytes.split(b'\0')[0]
+        self.loadedBytes = self.loadedBytes[len(self.filename)+1:]
+        self.timestamp = self.loadedBytes[:4]
+        self.message = self.loadedBytes[4:]
+        self.loadedBytes = None
+
+    def createOuputBytes(self, signed=False, encrypted=False, zipped=False, base64=False,senderKey=None, receiverKey=None):
+        self.loadedBytes = self.filename+b'\0'+ self.timestamp + self.message + b'\0'
+        if signed:
+            self.loadedBytes = self.signMessage(self.loadedBytes, senderKey)
+        if encrypted:
+            pass
+        if zipped:
+            self.loadedBytes = self.compressMessage(self.loadedBytes)
+        if base64:
+            self.loadedBytes = self.radix64Encode(self.loadedBytes)
+        return self.loadedBytes
+
 
     def signMessage(self, message, key):
-        timestamp = time.time()
-        timestamp = bytes(str(timestamp), "utf-8")
-        print(timestamp)
-        filename = bytes("filename", "utf-8")
-        message = filename+ timestamp + message
+        timestamp = int(time.time())
+        timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
+        
         hash = SHA1Wrapper().getHash(message)
         signature = key.sign(hash)
+        signatureLength = len(signature).to_bytes(2, byteorder='big')
         hash = SHA1Wrapper().getHashBytes(message)
         keyid = key.getKeyId()
-        return timestamp+keyid+hash[0:2]+signature + message
+        return b'signed'+key.getAlgorithmCode()+timestamp+keyid+hash[0:2]+signatureLength+signature + message
     
-    def verifyMessage(self, message, key):
-        pass
+    def verifyMessage(self, keyRing):
+        algo = self.loadedBytes[6].to_bytes(1, byteorder='big')
+        if self.loadedBytes[0:6] != b'signed' or algo not in codeToAsymmetricCipher:
+            return False
+        timestamp = self.loadedBytes[7:11]
+        keyid = self.loadedBytes[11:19]
+        key = keyRing.getKey(keyid)
+        if key is None or key.getAlgorithmCode() != algo:
+            return False
+        hashOctets = self.loadedBytes[19:21]#find way to use this to avoid hashing if bad message
+        signatureLength = self.loadedBytes[21:23]
+        signatureLength = int.from_bytes(signatureLength, byteorder='big')
+        signature = self.loadedBytes[23:23+signatureLength]
+        messageBundle = self.loadedBytes[23+signatureLength:]
+        print("MB"+messageBundle)
+        hash = SHA1Wrapper().getHashBytes(messageBundle)
+        self.loadedBytes = messageBundle
+        return key.verify(hash, signature)
 
     def compressMessage(self, message):
         return zlib.compress(message)
@@ -33,22 +106,21 @@ class Message():
         return zlib.decompress(message)
     
     def radix64Encode(self, message):
-        return base64.b64encode(message).decode('utf-8')
+        return base64.b64encode(message).decode('ascii')
     
     def radix64Decode(self, message):
         return base64.b64decode(message)
     
 
 if __name__ == "__main__":
-    message = Message()
     rsa_key = RSA.generate(1024)
     
     private_key = PrivateKeyWrapper(time.time(), rsa_key, "name", "email", RSACipher())
-    print(private_key.getKeyId())
-    print(private_key.getKeyIdHexString())
-    msg = message.signMessage(b"hello", private_key)
-    compressed = message.compressMessage(msg)
-    base64_message = message.radix64Encode(compressed)
-    print(base64_message)
-    print(message.radix64Decode(base64_message))
-    print(compressed)
+    msg = Message(b"hello", b"filename")
+    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key)
+    print(out_mst)
+    msg2 = Message(out_mst)
+    print("TEST")
+    print(msg2.filename)
+    print(msg2.timestamp)
+    print(msg2.message)

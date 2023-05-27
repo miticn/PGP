@@ -3,6 +3,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Signature import PKCS1_v1_5
 
+
+
 class AsymmetricCipher(ABC):
 
     @abstractmethod
@@ -19,6 +21,14 @@ class AsymmetricCipher(ABC):
 
     @abstractmethod
     def sign(self, hash, private_key):
+        pass
+
+    @abstractmethod
+    def getAlgorithmCode(self):
+        pass
+
+    @abstractmethod
+    def verifyTwoOctets(self, octets, signature, public_key):
         pass
 
 class RSACipher(AsymmetricCipher):
@@ -44,6 +54,17 @@ class RSACipher(AsymmetricCipher):
     def sign(hash, private_key):
         signature = PKCS1_v1_5.new(private_key).sign(hash)
         return signature
+    
+    @staticmethod
+    def getAlgorithmCode():
+        return b'\x01'
+    
+    @staticmethod
+    def verifyTwoOctets(octets, signature, public_key):
+        #verify that the first two octets are same as the first two octets of the hash
+        octets = octets[:2]
+        #get hash from signature??????????????????????????????????????????????????????????????????????????
+        return octets == hash
 
 class ElGamalDSACipher(AsymmetricCipher):
     #DSA is for signing and verification only
@@ -63,3 +84,15 @@ class ElGamalDSACipher(AsymmetricCipher):
     @staticmethod
     def sign(hash, private_key):
         pass
+    
+    @staticmethod
+    def getAlgorithmCode():
+        return b'\x02'
+    
+    @staticmethod
+    def verifyTwoOctets(octets, signature, public_key):
+        pass
+
+
+
+codeToAsymmetricCipher = {b'\x01': RSACipher(), b'\x02': ElGamalDSACipher()}

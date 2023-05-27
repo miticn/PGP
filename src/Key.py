@@ -22,6 +22,9 @@ class PublicKeyWrapper():
     
     def getKeyIdHexString(self):
         return self.getKeyId().hex().upper()
+    
+    def getAlgorithmCode(self):
+        return self.algorithm.getAlgorithmCode()
 
 class PrivateKeyWrapper(PublicKeyWrapper):
 

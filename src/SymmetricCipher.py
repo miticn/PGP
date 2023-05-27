@@ -14,8 +14,12 @@ class SymmetricCipher(ABC):
     def decrypt(self, key, ciphertext):
         pass
 
+    @abstractmethod
+    def getAlgorithmCode(self):
+        pass
 
-class AES128(SymmetricCipher):
+
+class AESCipher(SymmetricCipher):
     @staticmethod
     def encrypt(key, plaintext):
         backend = default_backend()
@@ -40,6 +44,10 @@ class AES128(SymmetricCipher):
         plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
 
         return plaintext
+    
+    @staticmethod
+    def getAlgorithmCode():
+        return b'\x01'
 
 class TripleDES(SymmetricCipher):
     @staticmethod
@@ -65,14 +73,20 @@ class TripleDES(SymmetricCipher):
         plaintext = unpadder.update(padded_plaintext) + unpadder.finalize()
 
         return plaintext
+    
+    @staticmethod
+    def getAlgorithmCode():
+        return b'\x02'
+
+codeToSymmetricCipher = {b'\xff': AESCipher(), b'\xfe': TripleDES()}
 
 '''
 key = os.urandom(16)
 plaintext = b"hello world hello world hello world"
 print("Plaintext:",plaintext)
-ciphertext = AES128.encrypt(key, plaintext)
-print("Ciphertext AES128:", ciphertext)
-decrypted_text = AES128.decrypt(key, ciphertext)
+ciphertext = AESCipher.encrypt(key, plaintext)
+print("Ciphertext AESCipher:", ciphertext)
+decrypted_text = AESCipher.decrypt(key, ciphertext)
 print("Decrypted text:", decrypted_text)
 
 ciphertext = TripleDES.encrypt(key, plaintext)
