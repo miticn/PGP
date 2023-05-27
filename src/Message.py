@@ -38,12 +38,12 @@ class Message():
     def __loadMessage(self):
         if self.loadedBytes is None:
             return
-        if False:
+        if self.loadedBytes[0:3] == 'r64':
             self.loadedBytes = self.radix64Decode(self.loadedBytes)
-        if False:
+        if self.loadedBytes[0:3] == b'zip':
             self.loadedBytes = self.decompressMessage(self.loadedBytes)
         if False:
-            pass 
+            pass
         if self.loadedBytes[0:6] == b'signed':
             self.verificationBundle = copy.deepcopy(self.loadedBytes)
             signatureLength = self.loadedBytes[21:23]
@@ -100,16 +100,18 @@ class Message():
         return key.verify(hash, signature), key
 
     def compressMessage(self, message):
-        return zlib.compress(message)
+        return b'zip'+zlib.compress(message)
     
     def decompressMessage(self, message):
-        return zlib.decompress(message)
+        if message[0:3] != b'zip':
+            return message
+        return zlib.decompress(message[3:])
     
     def radix64Encode(self, message):
-        return base64.b64encode(message).decode('ascii')
+        return 'r64'+base64.b64encode(message).decode('ascii')
     
     def radix64Decode(self, message):
-        return base64.b64decode(message)
+        return base64.b64decode(message[3:])
     
 
 if __name__ == "__main__":
@@ -117,7 +119,7 @@ if __name__ == "__main__":
     
     private_key = PrivateKeyWrapper(time.time(), rsa_key, "name", "email", RSACipher())
     msg = Message(b"hello", b"Lorem impsum blah blah blah")
-    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key)
+    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key, zipped=True, base64=True)
     print(out_mst)
     msg2 = Message(out_mst)
     print("TEST")
