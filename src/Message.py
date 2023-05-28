@@ -19,11 +19,11 @@ class Message():
     loadedBytes = None
     verificationBundle = None
 
-    def __init__(self, arg1:bytes, arg2 : bytes = None):
-        if arg2 is None:
-            self.__initLoadMsg__(arg1)
-        else:
+    def __init__(self, arg1:bytes, arg2 = None):
+        if type(arg2) is bytes:
             self.__initNewMSG__(arg1, arg2)
+        else:
+            self.__initLoadMsg__(arg1, arg2)
 
     def __initNewMSG__(self,filename: bytes, message: bytes):
         self.message = message
@@ -31,11 +31,11 @@ class Message():
         timestamp = int(time.time())
         self.timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
     
-    def __initLoadMsg__(self, loadedBytes: bytes):
+    def __initLoadMsg__(self, loadedBytes: bytes, recipientPrivateKey = None):
         self.loadedBytes = loadedBytes
-        self.__loadMessage()
+        self.__loadMessage(recipientPrivateKey)
 
-    def __loadMessage(self):
+    def __loadMessage(self, recipientPrivateKey):
         if self.loadedBytes is None:
             return
         if self.loadedBytes[0:3] == 'r64':
@@ -43,7 +43,7 @@ class Message():
         if self.loadedBytes[0:3] == b'zip':
             self.loadedBytes = self.decompressMessage(self.loadedBytes)
         if self.loadedBytes[0:4] == b'encr':
-            self.loadedBytes = self.decryptMessage(self.loadedBytes)
+            self.loadedBytes = self.decryptMessage(self.loadedBytes, recipientPrivateKey)
         if self.loadedBytes[0:6] == b'signed':
             self.verificationBundle = copy.deepcopy(self.loadedBytes)
             signatureLength = self.loadedBytes[21:23]
@@ -81,22 +81,31 @@ class Message():
         encryptedSessionKey = receiverKey.encrypt(sessionKey)
         encryptedMessage = encryptionAlgorithm.encrypt(sessionKey, message)
 
-        return b'encr'+receiverKey.getKeyId()+encryptionAlgorithm.getAlgorithmCode()+receiverKey.getAlgorithmCode()+encryptedSessionKey+encryptedMessage
+        return b'encr'+receiverKey.getKeyId()+encryptionAlgorithm.getAlgorithmCode()+receiverKey.getAlgorithmCode()+len(encryptedSessionKey).to_bytes(4, byteorder='big')+encryptedSessionKey+encryptedMessage
 
-    def decryptMessage(self, message, keyRing):
+    def decryptMessage(self, message, recipientKey):
         if message[0:4] != b'encr':
             return message
         keyid = message[4:12]
-        recipientKey = keyRing.getKeyById(keyid)
+        if keyid != recipientKey.getKeyId():
+            return None
         encryptionAlgorithm = message[12:13]
         asymmetricAlgorithm = message[13:14]
+        if asymmetricAlgorithm != recipientKey.getAlgorithmCode() \
+            or encryptionAlgorithm not in codeToSymmetricCipher:
+            return None
         SymmetricCipher = codeToSymmetricCipher[encryptionAlgorithm]
-        encryptedSessionKey = message[14:14+SymmetricCipher.getSessionKeySize()]
-        encryptedMessage = message[14+SymmetricCipher.getSessionKeySize():]
+        sessionKeySize = int.from_bytes(message[14:18], byteorder='big')
+        encryptedSessionKey = message[18:18+sessionKeySize]
+        encryptedMessage = message[18+sessionKeySize:]
         sessionKey = recipientKey.decrypt(encryptedSessionKey)
         return SymmetricCipher.decrypt(sessionKey, encryptedMessage)
 
-
+    def getEncryptedMessageReceiverKeyId(self):
+        if self.loadedBytes[0:4] != b'encr':
+            return None
+        return self.loadedBytes[4:12]
+    
     def signMessage(self, message, key):
         timestamp = int(time.time())
         timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
@@ -145,9 +154,9 @@ if __name__ == "__main__":
     
     private_key = PrivateKeyWrapper(time.time(), rsa_key, "name", "email", RSACipher())
     msg = Message(b"hello", b"Lorem impsum blah blah blah")
-    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key, zipped=True, base64=True)
+    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key, zipped=True, base64=True, encrypted=True, receiverKey=private_key, symmetricCipher=TripleDES())
     print(out_mst)
-    msg2 = Message(out_mst)
+    msg2 = Message(out_mst, private_key)
     print("TEST")
     print(msg2.filename)
     print(msg2.timestamp)
