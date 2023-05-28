@@ -25,6 +25,18 @@ class PublicKeyWrapper():
     
     def getAlgorithmCode(self):
         return self.algorithm.getAlgorithmCode()
+    
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove any non-picklable attributes
+        
+        state['publicKey'] = state['publicKey'].export_key()
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        # Restore the non-picklable attribute
+        self.publicKey = RSA.import_key(state['publicKey'])
 
 class PrivateKeyWrapper(PublicKeyWrapper):
 

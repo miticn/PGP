@@ -65,4 +65,10 @@ keyring.addKey(key3)
 timestamp4 = datetime.now()
 rsa_key4 = RSA.generate(1024)
 key4 = PrivateKeyWrapper(timestamp4, rsa_key4, "Laza", "example4@example.com", RSACipher())
+print(key4.getKeyIdHexString())
 keyring.addKey(key4)
+
+keyring_serialized = keyring.serialize()
+keyring_deserialized = pickle.loads(keyring_serialized)
+
+print(keyring_deserialized._keys[3].getKeyIdHexString())
