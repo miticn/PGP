@@ -3,6 +3,7 @@ from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.padding import PKCS7
+from cryptography.exceptions import InvalidTag
 import os
 
 class SymmetricCipher(ABC):
@@ -16,6 +17,14 @@ class SymmetricCipher(ABC):
 
     @abstractmethod
     def getAlgorithmCode(self):
+        pass
+
+    @abstractmethod
+    def generateSessionKey(self):
+        pass
+
+    @abstractmethod
+    def getSessionKeySize(self):
         pass
 
 
@@ -47,7 +56,15 @@ class AESCipher(SymmetricCipher):
     
     @staticmethod
     def getAlgorithmCode():
-        return b'\x01'
+        return b'\xff'
+    
+    @staticmethod
+    def generateSessionKey():
+        return os.urandom(16)
+    
+    @staticmethod
+    def getSessionKeySize():
+        return 16
 
 class TripleDES(SymmetricCipher):
     @staticmethod
@@ -76,9 +93,54 @@ class TripleDES(SymmetricCipher):
     
     @staticmethod
     def getAlgorithmCode():
-        return b'\x02'
+        return b'\xfe'
+    
+    @staticmethod
+    def generateSessionKey():
+        return os.urandom(24)
+    
+    @staticmethod
+    def getSessionKeySize():
+        return 24
 
-codeToSymmetricCipher = {b'\xff': AESCipher(), b'\xfe': TripleDES()}
+class AESGCipher(SymmetricCipher):
+    @staticmethod
+    def encrypt(key, plaintext):
+        backend = default_backend()
+        iv = os.urandom(12)  # GCM standard recommends 12 bytes
+        cipher = Cipher(algorithms.AES(key), modes.GCM(iv), backend=backend)
+        encryptor = cipher.encryptor()
+        ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+        return iv + encryptor.tag + ciphertext  # include the auth tag in the output
+
+    @staticmethod
+    def decrypt(key, ciphertext):
+        backend = default_backend()
+        iv = ciphertext[:12]
+        tag = ciphertext[12:28]  # GCM tag is 16 bytes
+        ciphertext = ciphertext[28:]
+        cipher = Cipher(algorithms.AES(key), modes.GCM(iv, tag), backend=backend)
+        decryptor = cipher.decryptor()
+        try:
+            plaintext = decryptor.update(ciphertext) + decryptor.finalize()
+            return plaintext
+        except InvalidTag:
+            return None
+
+    @staticmethod
+    def getAlgorithmCode():
+        return b'\xfd'
+
+    @staticmethod
+    def generateSessionKey():
+        return os.urandom(16)
+
+    @staticmethod
+    def getSessionKeySize():
+        return 16
+
+
+codeToSymmetricCipher = {b'\xff': AESCipher(), b'\xfe': TripleDES(), b'\xfd': AESGCipher()}
 
 '''
 key = os.urandom(16)
@@ -93,4 +155,18 @@ ciphertext = TripleDES.encrypt(key, plaintext)
 print("Ciphertext TripleDES:", ciphertext)
 decrypted_text = TripleDES.decrypt(key, ciphertext)
 print("Decrypted text:", decrypted_text)
+'''
+
+
+'''
+# AES-GCM
+key = AESGCipher.generateSessionKey()
+message = b"BRAVOOOOOOO!"
+encrypted_message = AESGCipher.encrypt(key, message)
+print(f"Encrypted message: {encrypted_message}")
+decrypted_message = AESGCipher.decrypt(key, encrypted_message)
+print(f"Decrypted message: {decrypted_message}")
+tampered_message = encrypted_message[:12] + os.urandom(16) + encrypted_message[28:]
+decrypted_message = AESGCipher.decrypt(key, tampered_message)
+print(decrypted_message)
 '''

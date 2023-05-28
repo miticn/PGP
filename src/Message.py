@@ -7,7 +7,7 @@ import copy
 
 from Crypto.PublicKey import RSA, ElGamal, DSA
 from AsymmetricCipher import RSACipher, codeToAsymmetricCipher
-from SymmetricCipher import AESCipher, TripleDES, codeToSymmetricCipher
+from SymmetricCipher import AESCipher, TripleDES, codeToSymmetricCipher, SymmetricCipher
 from Key import PrivateKeyWrapper
 from hash import SHA1Wrapper
 
@@ -42,8 +42,8 @@ class Message():
             self.loadedBytes = self.radix64Decode(self.loadedBytes)
         if self.loadedBytes[0:3] == b'zip':
             self.loadedBytes = self.decompressMessage(self.loadedBytes)
-        if False:
-            pass
+        if self.loadedBytes[0:4] == b'encr':
+            self.loadedBytes = self.decryptMessage(self.loadedBytes)
         if self.loadedBytes[0:6] == b'signed':
             self.verificationBundle = copy.deepcopy(self.loadedBytes)
             signatureLength = self.loadedBytes[21:23]
@@ -58,17 +58,43 @@ class Message():
         self.message = self.loadedBytes[4:]
         self.loadedBytes = None
 
-    def createOuputBytes(self, signed=False, encrypted=False, zipped=False, base64=False,senderKey=None, receiverKey=None):
+    def createOuputBytes(self, signed=False, encrypted=False, zipped=False, base64=False,senderKey=None, receiverKey=None, symmetricCipher : SymmetricCipher = None):
         self.loadedBytes = self.filename+b'\0'+ self.timestamp + self.message
         if signed:
             self.loadedBytes = self.signMessage(self.loadedBytes, senderKey)
         if encrypted:
-            pass
+            self.loadedBytes = self.encryptMessage(self.loadedBytes, receiverKey, symmetricCipher)
         if zipped:
             self.loadedBytes = self.compressMessage(self.loadedBytes)
         if base64:
             self.loadedBytes = self.radix64Encode(self.loadedBytes)
         return self.loadedBytes
+
+    def encryptMessage(self, message, receiverKey, encryptionAlgorithm : SymmetricCipher):
+        #crypded header 
+        #keyid
+        #symmetric cipher
+        #asymmetric cipher
+        #encrypted session key
+        #encrypted message
+        sessionKey = encryptionAlgorithm.generateSessionKey()
+        encryptedSessionKey = receiverKey.encrypt(sessionKey)
+        encryptedMessage = encryptionAlgorithm.encrypt(sessionKey, message)
+
+        return b'encr'+receiverKey.getKeyId()+encryptionAlgorithm.getAlgorithmCode()+receiverKey.getAlgorithmCode()+encryptedSessionKey+encryptedMessage
+
+    def decryptMessage(self, message, keyRing):
+        if message[0:4] != b'encr':
+            return message
+        keyid = message[4:12]
+        recipientKey = keyRing.getKeyById(keyid)
+        encryptionAlgorithm = message[12:13]
+        asymmetricAlgorithm = message[13:14]
+        SymmetricCipher = codeToSymmetricCipher[encryptionAlgorithm]
+        encryptedSessionKey = message[14:14+SymmetricCipher.getSessionKeySize()]
+        encryptedMessage = message[14+SymmetricCipher.getSessionKeySize():]
+        sessionKey = recipientKey.decrypt(encryptedSessionKey)
+        return SymmetricCipher.decrypt(sessionKey, encryptedMessage)
 
 
     def signMessage(self, message, key):
