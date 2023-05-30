@@ -181,7 +181,7 @@ tampered_message = encrypted_message[:12] + os.urandom(16) + encrypted_message[2
 decrypted_message = AESGCipher.decrypt(key, tampered_message)
 print(decrypted_message)
 '''
-
+'''
 # AES-GCM with password
 
 password = b"123456"
@@ -193,3 +193,4 @@ print(f"Decrypted message: {decrypted_message}")
 tampered_message = encrypted_message[:12] + os.urandom(16) + encrypted_message[28:]
 decrypted_message = AESGCipher.decryptWithPassword(password, tampered_message)
 print(decrypted_message)
+'''

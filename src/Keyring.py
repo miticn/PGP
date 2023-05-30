@@ -3,10 +3,12 @@ from AsymmetricCipher import *
 from datetime import datetime
 from Crypto.PublicKey import RSA
 import pickle
+from SymmetricCipher import AESGCipher
 
-class KeyringPR:
-    def __init__(self):
+class Keyring:
+    def __init__(self, private: bool = False):
         self._keys = []
+        self._private = private
 
     def addKey(self, key):
         self._keys.append(key)
@@ -21,27 +23,26 @@ class KeyringPR:
     def serialize(self):
         return pickle.dumps(self)
     
-
-class KeyringPU:
-    def __init__(self):
-        self._keys = []
-
-    def addKey(self, key):
-        self._keys.append(key)
-
-    def getKeyById(self, keyID):
-        for key in self._keys:
-            if keyID == key.getKeyId():
-                return key
-        
-        return None
+    @staticmethod
+    def deserialize(byts):
+        return pickle.loads(byts)
     
-    def serialize(self):
-        return pickle.dumps(self)
+    def saveToFile(self, filename, password):
+        with open(filename, "wb") as f:
+            encrypted_bytes = AESGCipher.encryptWithPassword(password, self.serialize())
+            f.write(encrypted_bytes)
+    
+    @staticmethod
+    def loadFromFile(filename, password):
+        with open(filename, "rb") as f:
+            encrypted_bytes = f.read()
+            decrypted_bytes = AESGCipher.decryptWithPassword(password, encrypted_bytes)
+            return Keyring.deserialize(decrypted_bytes)
+
 
 
 # Create an instance of KeyringPR
-keyring = KeyringPR()
+keyring = Keyring(True)
 
 # Example 1
 timestamp1 = datetime.now()
@@ -71,4 +72,7 @@ keyring.addKey(key4)
 keyring_serialized = keyring.serialize()
 keyring_deserialized = pickle.loads(keyring_serialized)
 
-print(keyring_deserialized._keys[3].getKeyIdHexString())
+# Eample for saveToFile and loadFromFile
+keyring.saveToFile("keyring.bin", b"123456")
+keyring_loaded = Keyring.loadFromFile("keyring.bin", b"123456")
+print(keyring_loaded.getKeyById(key4.getKeyId()).getKeyIdHexString())

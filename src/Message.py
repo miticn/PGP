@@ -1,7 +1,7 @@
 import base64
 import time
 import zlib
-from Keyring import KeyringPR 
+from Keyring import Keyring 
 
 import copy
 
@@ -161,6 +161,6 @@ if __name__ == "__main__":
     print(msg2.filename)
     print(msg2.timestamp)
     print(msg2.message)
-    keyRing = KeyringPR()
+    keyRing = Keyring()
     keyRing.addKey(private_key)
     print("Verify MSG: ",msg2.verifyMessage(keyRing))
