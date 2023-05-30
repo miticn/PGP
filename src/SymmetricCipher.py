@@ -6,6 +6,8 @@ from cryptography.hazmat.primitives.padding import PKCS7
 from cryptography.exceptions import InvalidTag
 import os
 
+from hash import SHA3_256Wrapper
+
 class SymmetricCipher(ABC):
     @abstractmethod
     def encrypt(self, key, plaintext):
@@ -139,6 +141,15 @@ class AESGCipher(SymmetricCipher):
     def getSessionKeySize():
         return 16
 
+    @staticmethod
+    def encryptWithPassword(password, plaintext:bytes):
+        key = SHA3_256Wrapper.getHashBytes(password)
+        return AESGCipher.encrypt(key, plaintext)
+    
+    @staticmethod
+    def decryptWithPassword(password, ciphertext:bytes):
+        key = SHA3_256Wrapper.getHashBytes(password)
+        return AESGCipher.decrypt(key, ciphertext)
 
 codeToSymmetricCipher = {b'\xff': AESCipher(), b'\xfe': TripleDES(), b'\xfd': AESGCipher()}
 
@@ -170,3 +181,15 @@ tampered_message = encrypted_message[:12] + os.urandom(16) + encrypted_message[2
 decrypted_message = AESGCipher.decrypt(key, tampered_message)
 print(decrypted_message)
 '''
+
+# AES-GCM with password
+
+password = b"123456"
+message = b"Hello, World!"
+encrypted_message = AESGCipher.encryptWithPassword(password, message)
+print(f"Encrypted message: {encrypted_message}")
+decrypted_message = AESGCipher.decryptWithPassword(password, encrypted_message)
+print(f"Decrypted message: {decrypted_message}")
+tampered_message = encrypted_message[:12] + os.urandom(16) + encrypted_message[28:]
+decrypted_message = AESGCipher.decryptWithPassword(password, tampered_message)
+print(decrypted_message)
