@@ -45,6 +45,16 @@ class PublicKeyWrapper():
         # Restore the non-picklable attribute
         self.publicKey = self._importPrivateKey(state['publicKey'])
 
+    def exportPublicKeyPem(self):
+        return self.publicKey.export_key("PEM")
+    
+    def exportPublicKeyToFile(self, filename):
+        with open(filename, "wb") as f:
+            f.write(self.exportPublicKeyPem())
+            return True
+        return False
+
+
 class PrivateKeyWrapper(PublicKeyWrapper):
     def __init__(self, timestamp : datetime, privateKey : object , name: str, email: str, algorithm: AsymmetricCipher, password: bytes):
         publicKey = privateKey.public_key()
@@ -65,13 +75,31 @@ class PrivateKeyWrapper(PublicKeyWrapper):
 
     # private key must have
     def decrypt(self, ciphertext, password):
-        self.privateKey = self.__decryptPrivateKey(password)
-        data = self.algorithm.decrypt(ciphertext, self.privateKey)
-        self.privateKey = self.__encryptPrivateKey(password)
+        data = None
+        privateKey = self.__decryptPrivateKey(password)
+        if privateKey is not None:
+            data = self.algorithm.decrypt(ciphertext, privateKey)
         return data
 
     def sign(self, hash, password):
-        self.privateKey = self.__decryptPrivateKey(password)
-        data = self.algorithm.sign(hash, self.privateKey)
-        self.privateKey = self.__encryptPrivateKey(password)
+        data = None
+        privateKey = self.__decryptPrivateKey(password)
+        if privateKey is not None:
+            data = self.algorithm.sign(hash, privateKey)
         return data
+    
+    def exportPrivateKeyPem(self, password):
+        data = None
+        privateKey = self.__decryptPrivateKey(password)
+        if privateKey is not None:
+            data = privateKey.export_key("PEM", pkcs=8, protection="scryptAndAES128-CBC", passphrase=password)
+        return data
+    
+    def exportPrivateKeyToFile(self, filename, password):
+        data = self.exportPrivateKeyPem(password)
+        if data != None:
+            with open(filename, "wb") as f:
+                f.write(self.exportPrivateKeyPem(password))
+                return True
+            
+        return False
