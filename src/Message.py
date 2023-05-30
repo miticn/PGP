@@ -19,11 +19,11 @@ class Message():
     loadedBytes = None
     verificationBundle = None
 
-    def __init__(self, arg1:bytes, arg2 = None):
+    def __init__(self, arg1:bytes, arg2 = None, arg3 = None):
         if type(arg2) is bytes:
             self.__initNewMSG__(arg1, arg2)
         else:
-            self.__initLoadMsg__(arg1, arg2)
+            self.__initLoadMsg__(arg1, arg2, arg3)
 
     def __initNewMSG__(self,filename: bytes, message: bytes):
         self.message = message
@@ -31,11 +31,11 @@ class Message():
         timestamp = int(time.time())
         self.timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
     
-    def __initLoadMsg__(self, loadedBytes: bytes, recipientPrivateKey = None):
+    def __initLoadMsg__(self, loadedBytes: bytes, recipientPrivateKey = None, password = None):
         self.loadedBytes = loadedBytes
-        self.__loadMessage(recipientPrivateKey)
+        self.__loadMessage(recipientPrivateKey, password)
 
-    def __loadMessage(self, recipientPrivateKey):
+    def __loadMessage(self, recipientPrivateKey, password):
         if self.loadedBytes is None:
             return
         if self.loadedBytes[0:3] == 'r64':
@@ -43,7 +43,7 @@ class Message():
         if self.loadedBytes[0:3] == b'zip':
             self.loadedBytes = self.decompressMessage(self.loadedBytes)
         if self.loadedBytes[0:4] == b'encr':
-            self.loadedBytes = self.decryptMessage(self.loadedBytes, recipientPrivateKey)
+            self.loadedBytes = self.decryptMessage(self.loadedBytes, recipientPrivateKey, password)
         if self.loadedBytes[0:6] == b'signed':
             self.verificationBundle = copy.deepcopy(self.loadedBytes)
             signatureLength = self.loadedBytes[21:23]
@@ -58,10 +58,10 @@ class Message():
         self.message = self.loadedBytes[4:]
         self.loadedBytes = None
 
-    def createOuputBytes(self, signed=False, encrypted=False, zipped=False, base64=False,senderKey=None, receiverKey=None, symmetricCipher : SymmetricCipher = None):
+    def createOuputBytes(self, signed=False, encrypted=False, zipped=False, base64=False,senderKey=None, password:bytes = None , receiverKey=None, symmetricCipher : SymmetricCipher = None):
         self.loadedBytes = self.filename+b'\0'+ self.timestamp + self.message
         if signed:
-            self.loadedBytes = self.signMessage(self.loadedBytes, senderKey)
+            self.loadedBytes = self.signMessage(self.loadedBytes, senderKey, password)
         if encrypted:
             self.loadedBytes = self.encryptMessage(self.loadedBytes, receiverKey, symmetricCipher)
         if zipped:
@@ -83,7 +83,7 @@ class Message():
 
         return b'encr'+receiverKey.getKeyId()+encryptionAlgorithm.getAlgorithmCode()+receiverKey.getAlgorithmCode()+len(encryptedSessionKey).to_bytes(4, byteorder='big')+encryptedSessionKey+encryptedMessage
 
-    def decryptMessage(self, message, recipientKey):
+    def decryptMessage(self, message, recipientKey, password):
         if message[0:4] != b'encr':
             return message
         keyid = message[4:12]
@@ -98,7 +98,7 @@ class Message():
         sessionKeySize = int.from_bytes(message[14:18], byteorder='big')
         encryptedSessionKey = message[18:18+sessionKeySize]
         encryptedMessage = message[18+sessionKeySize:]
-        sessionKey = recipientKey.decrypt(encryptedSessionKey)
+        sessionKey = recipientKey.decrypt(encryptedSessionKey, password)
         return SymmetricCipher.decrypt(sessionKey, encryptedMessage)
 
     def getEncryptedMessageReceiverKeyId(self):
@@ -106,12 +106,12 @@ class Message():
             return None
         return self.loadedBytes[4:12]
     
-    def signMessage(self, message, key):
+    def signMessage(self, message, key, password):
         timestamp = int(time.time())
         timestamp = timestamp.to_bytes(4, byteorder='big')#4bytes
         
         hash = SHA1Wrapper().getHash(message)
-        signature = key.sign(hash)
+        signature = key.sign(hash, password)
         signatureLength = len(signature).to_bytes(2, byteorder='big')
         hash = SHA1Wrapper().getHashBytes(message)
         keyid = key.getKeyId()
@@ -152,11 +152,11 @@ class Message():
 if __name__ == "__main__":
     rsa_key = RSA.generate(1024)
     
-    private_key = PrivateKeyWrapper(time.time(), rsa_key, "name", "email", RSACipher())
+    private_key = PrivateKeyWrapper(time.time(), rsa_key, "name", "email", RSACipher(), b'123123')
     msg = Message(b"hello", b"Lorem impsum blah blah blah")
-    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key, zipped=True, base64=True, encrypted=True, receiverKey=private_key, symmetricCipher=TripleDES())
+    out_mst = msg.createOuputBytes(signed=True, senderKey=private_key, zipped=True, base64=True, encrypted=True, receiverKey=private_key, symmetricCipher=TripleDES(), password=b'123123')
     print(out_mst)
-    msg2 = Message(out_mst, private_key)
+    msg2 = Message(out_mst, private_key, b'123123')
     print("TEST")
     print(msg2.filename)
     print(msg2.timestamp)

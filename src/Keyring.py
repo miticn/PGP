@@ -20,16 +20,16 @@ class Keyring:
         
         return None
     
-    def serialize(self):
+    def __serialize(self):
         return pickle.dumps(self)
     
     @staticmethod
-    def deserialize(byts):
+    def __deserialize(byts):
         return pickle.loads(byts)
     
     def saveToFile(self, filename, password):
         with open(filename, "wb") as f:
-            encrypted_bytes = AESGCipher.encryptWithPassword(password, self.serialize())
+            encrypted_bytes = AESGCipher.encryptWithPassword(password, self.__serialize())
             f.write(encrypted_bytes)
     
     @staticmethod
@@ -37,7 +37,7 @@ class Keyring:
         with open(filename, "rb") as f:
             encrypted_bytes = f.read()
             decrypted_bytes = AESGCipher.decryptWithPassword(password, encrypted_bytes)
-            return Keyring.deserialize(decrypted_bytes)
+            return Keyring.__deserialize(decrypted_bytes)
 
 
 
@@ -47,30 +47,27 @@ keyring = Keyring(True)
 # Example 1
 timestamp1 = datetime.now()
 rsa_key1 = RSA.generate(1024)
-key1 = PrivateKeyWrapper(timestamp1, rsa_key1, "Pera", "example1@example.com", RSACipher())
+key1 = PrivateKeyWrapper(timestamp1, rsa_key1, "Pera", "example1@example.com", RSACipher(), b"123")
 keyring.addKey(key1)
 
 # Example 2
 timestamp2 = datetime.now()
 rsa_key2 = RSA.generate(1024)
-key2 = PrivateKeyWrapper(timestamp2, rsa_key2, "Zika", "example2@example.com", RSACipher())
+key2 = PrivateKeyWrapper(timestamp2, rsa_key2, "Zika", "example2@example.com", RSACipher(), b"123")
 keyring.addKey(key2)
 
 # Example 3
 timestamp3 = datetime.now()
 rsa_key3 = RSA.generate(1024)
-key3 = PrivateKeyWrapper(timestamp3, rsa_key3, "Mika", "example3@example.com", RSACipher())
+key3 = PrivateKeyWrapper(timestamp3, rsa_key3, "Mika", "example3@example.com", RSACipher(), b"123")
 keyring.addKey(key3)
 
 # Example 4
 timestamp4 = datetime.now()
 rsa_key4 = RSA.generate(1024)
-key4 = PrivateKeyWrapper(timestamp4, rsa_key4, "Laza", "example4@example.com", RSACipher())
+key4 = PrivateKeyWrapper(timestamp4, rsa_key4, "Laza", "example4@example.com", RSACipher(), b"123")
 print(key4.getKeyIdHexString())
 keyring.addKey(key4)
-
-keyring_serialized = keyring.serialize()
-keyring_deserialized = pickle.loads(keyring_serialized)
 
 # Eample for saveToFile and loadFromFile
 keyring.saveToFile("keyring.bin", b"123456")
