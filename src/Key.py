@@ -101,5 +101,4 @@ class PrivateKeyWrapper(PublicKeyWrapper):
             with open(filename, "wb") as f:
                 f.write(self.exportPrivateKeyPem(password))
                 return True
-            
         return False
