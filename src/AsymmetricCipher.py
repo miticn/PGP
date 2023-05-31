@@ -13,6 +13,7 @@ from ELGAMAL import ElGamalHelper
 
 from Crypto.Util.number import bytes_to_long, long_to_bytes
 from Crypto.Random import random
+from Crypto.Util.number import GCD
 
 
 class AsymmetricCipher(ABC):
@@ -122,8 +123,9 @@ class ElGamalDSACipher(AsymmetricCipher):
         y = public_key.get_elgamal_public_key()
 
         plaintext_int = bytes_to_long(plaintext)
-
-        k = random.StrongRandom().randint(1, int(p) - 1)
+        while 1:
+            k = random.StrongRandom().randint(1, int(p) - 1)
+            if GCD(k,p-1)==1: break
         #k = random.randint(1, int(p) - 1)
         c1 = pow(g, k, p)
         c2 = (plaintext_int * pow(int(y), k, int(p))) % int(p)
