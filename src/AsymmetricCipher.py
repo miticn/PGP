@@ -123,7 +123,8 @@ class ElGamalDSACipher(AsymmetricCipher):
 
         plaintext_int = bytes_to_long(plaintext)
 
-        k = random.randint(1, int(p) - 1)
+        k = random.StrongRandom().randint(1, int(p) - 1)
+        #k = random.randint(1, int(p) - 1)
         c1 = pow(g, k, p)
         c2 = (plaintext_int * pow(int(y), k, int(p))) % int(p)
 
