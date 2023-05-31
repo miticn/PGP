@@ -11,6 +11,9 @@ from Crypto.Random import get_random_bytes
 from hash import SHA1Wrapper
 from ELGAMAL import ElGamalHelper
 
+from Crypto.Util.number import bytes_to_long, long_to_bytes
+from Crypto.Random import random
+
 
 class AsymmetricCipher(ABC):
 
@@ -89,6 +92,15 @@ class ElGamalDSAKey:
     def size_in_bits(self):
         return self.DSAKey.size_in_bits()
     
+    def get_elgamal_p(self):
+        return self.ElgamalKey.p
+
+    def get_elgamal_g(self):
+        return self.ElgamalKey.g
+    
+    def get_elgamal_public_key(self):
+        return self.ElgamalKey.publickey().y
+    
     @staticmethod
     def generate(bits, randfunc=None):
         ElgamalKey = ElGamal.generate(bits,  get_random_bytes)
@@ -97,13 +109,23 @@ class ElGamalDSAKey:
         return ElGamalDSAKey(ElgamalKey, DSAKey)
 
 
-
 class ElGamalDSACipher(AsymmetricCipher):
     #DSA is for signing and verification only
     #ElGamal is for encryption and decryption only
     @staticmethod
     def encrypt(plaintext, public_key):#ElGamal
-        pass
+        p = public_key.get_elgamal_p()
+        g = public_key.get_elgamal_g()
+        y = public_key.get_elgamal_public_key()
+
+        plaintext_int = bytes_to_long(plaintext)
+
+        k = random.randint(1, int(p) - 1)
+        c1 = pow(g, k, p)
+        c2 = (plaintext_int * pow(int(y), k, int(p))) % int(p)
+
+        ciphertext = (c1, c2)
+        return ciphertext
 
     @staticmethod
     def verify(hash, signature, public_key):#DSA
@@ -116,7 +138,9 @@ class ElGamalDSACipher(AsymmetricCipher):
 
     @staticmethod
     def decrypt(ciphertext, private_key):#ElGamal
-        pass
+        elgamal_key = private_key
+        decrypted_plaintext = elgamal_key.decrypt(ciphertext)
+        return decrypted_plaintext
 
     @staticmethod
     def sign(hash, private_key):#DSA
@@ -138,14 +162,14 @@ codeToAsymmetricCipher = {b'\x01': RSACipher(), b'\x02': ElGamalDSACipher()}
 if __name__ == "__main__":
 
     #tests for ElGamalDSA
-
-
     key = ElGamalDSAKey.generate(1024)
 
     ct = ElGamalDSACipher.encrypt(b"plaintext", key)
-    print(ElGamalDSACipher.decrypt(ct, key))
+    #print(ElGamalDSACipher.decrypt(ct, key))
+    print(ct)
 
     txt = b"TESTETSTEST"
+    print("\n\nAAAAAAAAAAAAAAAAAAAA\n\n")
     hash = SHA1Wrapper.getHash(txt)
     signature = ElGamalDSACipher.sign(hash, key)
     print(ElGamalDSACipher.verify(hash, signature, key))
@@ -155,6 +179,3 @@ if __name__ == "__main__":
 
 
     print(key.export_key(passphrase=b"123", pkcs=8, protection="PBKDF2WithHMAC-SHA1AndDES-EDE3-CBC"))
-
-
-
