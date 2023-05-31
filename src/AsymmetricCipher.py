@@ -101,6 +101,9 @@ class ElGamalDSAKey:
     def get_elgamal_public_key(self):
         return self.ElgamalKey.publickey().y
     
+    def get_elgamal_private_key(self):
+        return self.ElgamalKey.x
+    
     @staticmethod
     def generate(bits, randfunc=None):
         ElgamalKey = ElGamal.generate(bits,  get_random_bytes)
@@ -137,10 +140,19 @@ class ElGamalDSACipher(AsymmetricCipher):
             return False
 
     @staticmethod
-    def decrypt(ciphertext, private_key):#ElGamal
-        elgamal_key = private_key
-        decrypted_plaintext = elgamal_key.decrypt(ciphertext)
-        return decrypted_plaintext
+    def decrypt(ciphertext, private_key):  # ElGamal
+        p = int(private_key.get_elgamal_p())
+        x = int(private_key.get_elgamal_private_key())
+        c1, c2 = ciphertext
+
+        # Convert IntegerCustom objects to integers
+        c1 = int(c1)
+        c2 = int(c2)
+
+        plaintext_int = (c2 * pow(c1, p - 1 - x, p)) % p
+        plaintext = long_to_bytes(plaintext_int)
+
+        return plaintext
 
     @staticmethod
     def sign(hash, private_key):#DSA
@@ -165,8 +177,8 @@ if __name__ == "__main__":
     key = ElGamalDSAKey.generate(1024)
 
     ct = ElGamalDSACipher.encrypt(b"plaintext", key)
-    #print(ElGamalDSACipher.decrypt(ct, key))
-    print(ct)
+    print(ElGamalDSACipher.decrypt(ct, key))
+    #print(ct)
 
     txt = b"TESTETSTEST"
     print("\n\nAAAAAAAAAAAAAAAAAAAA\n\n")
