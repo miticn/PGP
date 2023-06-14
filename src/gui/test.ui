@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>633</width>
+    <height>432</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>PGP_Mitic_Davidovic</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>633</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuGenerate_Key">
+    <property name="title">
+     <string>Keys</string>
+    </property>
+    <addaction name="actionGenerate_new_Key"/>
+    <addaction name="actionRemove_existing_Key"/>
+    <addaction name="separator"/>
+    <addaction name="actionImport_Key_2"/>
+    <addaction name="actionExport_Key_2"/>
+    <addaction name="separator"/>
+    <addaction name="actionShow_Keyrings"/>
+   </widget>
+   <widget class="QMenu" name="menuMessages">
+    <property name="title">
+     <string>Messages</string>
+    </property>
+    <addaction name="actionSend_Message"/>
+    <addaction name="actionReceive_Message"/>
+   </widget>
+   <addaction name="menuGenerate_Key"/>
+   <addaction name="menuMessages"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="actionGenerate_new_Key">
+   <property name="text">
+    <string>Generate new Key</string>
+   </property>
+  </action>
+  <action name="actionRemove_existing_Key">
+   <property name="checkable">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Remove existing Key</string>
+   </property>
+  </action>
+  <action name="actionImport_Key">
+   <property name="text">
+    <string>Import Key</string>
+   </property>
+  </action>
+  <action name="actionExport_Key">
+   <property name="text">
+    <string>Export Key</string>
+   </property>
+  </action>
+  <action name="actionImport_Key_2">
+   <property name="text">
+    <string>Import Key</string>
+   </property>
+  </action>
+  <action name="actionExport_Key_2">
+   <property name="text">
+    <string>Export Key</string>
+   </property>
+  </action>
+  <action name="actionSend_Message">
+   <property name="text">
+    <string>Send Message</string>
+   </property>
+  </action>
+  <action name="actionReceive_Message">
+   <property name="text">
+    <string>Receive Message</string>
+   </property>
+  </action>
+  <action name="actionShow_Keyrings">
+   <property name="text">
+    <string>Show Keyrings</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
