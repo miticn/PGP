@@ -78,3 +78,19 @@ if __name__ == "__main__":
     print(keykey.exportPrivateKeyPem(b"123"))
     keykey.exportPublicKeyToFile("keykeypub.pem")
     keykey.exportPrivateKeyToFile("keykeypriv.pem", b"123")
+
+    #create new keyring
+    password = b"123"
+    privateKeyring = Keyring(True)
+    publicKeyring = Keyring(False)
+
+    privateKeyring.saveToFile("private_keyring.bin", password)
+    publicKeyring.saveToFile("public_keyring.bin", password)
+    
+    #loading keys default
+    password = b"123"
+    privateKeyring = Keyring.loadFromFile("private_keyring.bin", password)
+    publicKeyring = Keyring.loadFromFile("public_keyring.bin", password)
+
+    if privateKeyring is None or publicKeyring is None:
+        print("Wrong password")
