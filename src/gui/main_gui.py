@@ -1,12 +1,28 @@
 import sys
+import os
+from datetime import datetime
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow
 from PyQt5.QtCore import Qt
-import os
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog, QButtonGroup
+
+# Get the absolute path of the project's root directory
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+
+# Add the root directory to the system path
+sys.path.append(root_dir)
+
+from Keyring import Keyring
+from AsymmetricCipher import *
+from Key import PrivateKeyWrapper
+
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Initializing keyrings
+privateKeyring = Keyring(True)
+publicKeyring = Keyring(False)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -59,15 +75,44 @@ class GenerateNewKey(QDialog):
 
         self.UiComponents()
 
+        self.selected_algorithm = None
+        self.name = ""
+        self.email = ""
+        self.id = -1
+
     # Method for widgets
     def UiComponents(self):
         self.backButton.clicked.connect(self.back)
         self.generateButton.clicked.connect(self.goToSavePrivateKey)
 
     def goToSavePrivateKey(self):
-        savePrivateKey = SavePrivateKey()
-        widget.addWidget(savePrivateKey)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
+        button_group = QButtonGroup()
+        button_group.addButton(self.RB1024, 0)
+        button_group.addButton(self.RB2048, 1)
+
+        selected_algorithm = self.algorithmCB.currentText()
+
+        if selected_algorithm == "RSA":
+            print("\n\tA: RSA___" + self.algorithmCB.currentText() + "\n")
+        else:
+            print("\n\tB: ELGAMALDSA___" + self.algorithmCB.currentText() + "\n")
+
+
+        id = button_group.checkedId()
+        if id == -1:
+            print("No radio button selected")
+        elif id == 0:
+            print("Radio button '1024' selected")
+        elif id == 1:
+            print("Radio button '2048' selected")
+
+        if self.nameTB.text().strip() == "" or self.emailTB.text().strip() == "" or id == -1:
+            self.errorLabel.setText("You must fill in all the required fields.")
+            self.errorLabel.setStyleSheet("color: red;")
+        else:
+            savePrivateKey = SavePrivateKey(self)
+            widget.addWidget(savePrivateKey)
+            widget.setCurrentIndex(widget.currentIndex() + 1)
 
     # Action method
     def back(self):
@@ -149,11 +194,13 @@ class EnterPassword(QDialog):
 
 
 class SavePrivateKey(QDialog):
-    def __init__(self):
+    def __init__(self, generateNewKey):
         super(SavePrivateKey, self).__init__()
 
         ui_file = os.path.join(script_dir, "savePrivateKey.ui")
         loadUi(ui_file, self)
+
+        self.generateNewKey = generateNewKey
 
         self.UiComponents()
 
@@ -162,13 +209,42 @@ class SavePrivateKey(QDialog):
         self.backButton.clicked.connect(self.back)
         self.saveButton.clicked.connect(self.getBackToMainWindow)
 
+        # Access the values from GenerateNewKey
+        selected_algorithm = self.generateNewKey.selected_algorithm
+        name = self.generateNewKey.nameTB.text()
+        email = self.generateNewKey.emailTB.text()
+        id = self.generateNewKey.id
+
+        # Use the values as needed
+        print(f"Selected Algorithm: {selected_algorithm}")
+        print(f"Name: {name}")
+        print(f"Email: {email}")
+        print(f"ID: {id}")
+
+
+
 
     # Action method
     def getBackToMainWindow(self):
-        current_index = widget.currentIndex()
-        widget.removeWidget(widget.widget(current_index))
-        current_index = widget.currentIndex()
-        widget.removeWidget(widget.widget(current_index))
+        if self.passwordTB.text().strip() == "" or self.confirmPasswordTB.text().strip() == "":
+            self.errorLabel.setText("You must fill both fields.")
+            self.errorLabel.setStyleSheet("color: red;")
+        elif self.passwordTB.text() != self.confirmPasswordTB.text():
+            self.errorLabel.setText("Passwords do NOT match.")
+            self.errorLabel.setStyleSheet("color: red;")
+        else:
+            # Passwords match
+            password = self.passwordTB.text().encode()
+            timestamp = datetime.now()
+            public_key = RSA.generate(1024)
+            private_key = PrivateKeyWrapper(timestamp, public_key, "Peter", "example@example.com", RSACipher(), password)
+
+            privateKeyring.addKey(private_key)
+
+            current_index = widget.currentIndex()
+            widget.removeWidget(widget.widget(current_index))
+            current_index = widget.currentIndex()
+            widget.removeWidget(widget.widget(current_index))
 
     def back(self):
         current_index = widget.currentIndex()

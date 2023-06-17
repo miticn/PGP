@@ -3,11 +3,14 @@ from AsymmetricCipher import *
 from datetime import datetime
 from Crypto.PublicKey import RSA, ElGamal, DSA
 from hash import SHA1Wrapper
+from Keyring import Keyring
+
 
 def main():
     timestamp = datetime.now()
     rsa_key = RSA.generate(1024)
     key = PrivateKeyWrapper(timestamp, rsa_key, "Peter", "example@example.com", RSACipher(), b"peter123")
+
     Message = b"Hello World"
     encrypted = key.encrypt(Message)
     print("\n\n")

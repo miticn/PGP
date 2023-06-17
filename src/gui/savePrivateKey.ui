@@ -88,8 +88,8 @@
   <widget class="QPushButton" name="saveButton">
    <property name="geometry">
     <rect>
-     <x>200</x>
-     <y>250</y>
+     <x>190</x>
+     <y>280</y>
      <width>181</width>
      <height>31</height>
     </rect>
@@ -109,6 +109,19 @@
    </property>
    <property name="text">
     <string>&lt;- Back</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="errorLabel">
+   <property name="geometry">
+    <rect>
+     <x>230</x>
+     <y>240</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>
