@@ -4,6 +4,7 @@ from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow
 from PyQt5.QtCore import Qt
 import os
+from PyQt5.QtWidgets import QFileDialog
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -217,11 +218,18 @@ class ReceiveMessage(QDialog):
     # Method for widgets
     def UiComponents(self):
         self.backButton.clicked.connect(self.back)
-        self.saveFileButton.clicked.connect(self.goToSaveFileAndReturnToMain)
+        self.browseFileButton.clicked.connect(self.browse_file)
+        # self.saveFileButton.clicked.connect(self.goToSaveFileAndReturnToMain)
 
         # self.decryptionEmptyLabel.setText('DaLiJeUpsesno')
         # self.verificationLabel.setText('DaLiJeUpsesno')
         
+    def browse_file(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File")
+        if file_path:
+            with open(file_path, 'r') as file:
+                content = file.read()
+                self.textEdit.setText(content)
 
     def goToSaveFileAndReturnToMain(self):
         
