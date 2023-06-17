@@ -7,15 +7,17 @@ from hash import SHA1Wrapper
 def main():
     timestamp = datetime.now()
     rsa_key = RSA.generate(1024)
-    key = PrivateKeyWrapper(timestamp, rsa_key, "Peter", "example@example.com", RSACipher())
+    key = PrivateKeyWrapper(timestamp, rsa_key, "Peter", "example@example.com", RSACipher(), b"peter123")
     Message = b"Hello World"
     encrypted = key.encrypt(Message)
+    print("\n\n")
     print(encrypted)
-    print(key.decrypt(encrypted))
+    print("\n\n")
+    print(key.decrypt(encrypted, b'peter123'))
 
     sha = SHA1Wrapper()
     hash = sha.getHash(Message)
-    signature = key.sign(hash)
+    signature = key.sign(hash, b'peter123')
     print(signature)
     hash2 = sha.getHash(b"test")
     print(key.verify(hash2, signature))
