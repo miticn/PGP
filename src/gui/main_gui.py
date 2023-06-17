@@ -180,10 +180,10 @@ class SavePrivateKey(QDialog):
 class SendMessage(QDialog):
     def __init__(self):
         super(SendMessage, self).__init__()
-        
+
         ui_file = os.path.join(script_dir, "sendMessage.ui")
         loadUi(ui_file, self)
-        
+
         self.UiComponents()
 
     # Method for widgets
@@ -192,8 +192,13 @@ class SendMessage(QDialog):
         self.sendMessageButton.clicked.connect(self.goToSendAndReturn)
 
     def goToSendAndReturn(self):
-        
-        # Send the message
+        message = self.messageTB.toPlainText()  # Get the text from the QTextEdit widget
+
+        # Save the message to a file
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save Message", "", "Text Files (*.txt)")
+        if file_path:
+            with open(file_path, 'w') as file:
+                file.write(message)
 
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
