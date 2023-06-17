@@ -40,41 +40,57 @@ class Keyring:
             return Keyring.__deserialize(decrypted_bytes)
 
 
+if __name__ == "__main__":
+    # Create an instance of KeyringPR
+    keyring = Keyring(True)
 
-# Create an instance of KeyringPR
-keyring = Keyring(True)
+    # Example 1
+    timestamp1 = datetime.now()
+    rsa_key1 = RSA.generate(1024)
+    key1 = PrivateKeyWrapper(timestamp1, rsa_key1, "Pera", "example1@example.com", RSACipher(), b"123")
+    keyring.addKey(key1)
 
-# Example 1
-timestamp1 = datetime.now()
-rsa_key1 = RSA.generate(1024)
-key1 = PrivateKeyWrapper(timestamp1, rsa_key1, "Pera", "example1@example.com", RSACipher(), b"123")
-keyring.addKey(key1)
+    # Example 2
+    timestamp2 = datetime.now()
+    rsa_key2 = RSA.generate(1024)
+    key2 = PrivateKeyWrapper(timestamp2, rsa_key2, "Zika", "example2@example.com", RSACipher(), b"123")
+    keyring.addKey(key2)
 
-# Example 2
-timestamp2 = datetime.now()
-rsa_key2 = RSA.generate(1024)
-key2 = PrivateKeyWrapper(timestamp2, rsa_key2, "Zika", "example2@example.com", RSACipher(), b"123")
-keyring.addKey(key2)
+    # Example 3
+    timestamp3 = datetime.now()
+    rsa_key3 = RSA.generate(1024)
+    key3 = PrivateKeyWrapper(timestamp3, rsa_key3, "Mika", "example3@example.com", RSACipher(), b"123")
+    keyring.addKey(key3)
 
-# Example 3
-timestamp3 = datetime.now()
-rsa_key3 = RSA.generate(1024)
-key3 = PrivateKeyWrapper(timestamp3, rsa_key3, "Mika", "example3@example.com", RSACipher(), b"123")
-keyring.addKey(key3)
+    # Example 4
+    timestamp4 = datetime.now()
+    rsa_key4 = RSA.generate(1024)
+    key4 = PrivateKeyWrapper(timestamp4, rsa_key4, "Laza", "example4@example.com", RSACipher(), b"123")
+    print(key4.getKeyIdHexString())
+    keyring.addKey(key4)
 
-# Example 4
-timestamp4 = datetime.now()
-rsa_key4 = RSA.generate(1024)
-key4 = PrivateKeyWrapper(timestamp4, rsa_key4, "Laza", "example4@example.com", RSACipher(), b"123")
-print(key4.getKeyIdHexString())
-keyring.addKey(key4)
+    # Eample for saveToFile and loadFromFile
+    keyring.saveToFile("keyring.bin", b"123456")
+    keyring_loaded = Keyring.loadFromFile("keyring.bin", b"123456")
+    keykey = keyring_loaded.getKeyById(key4.getKeyId())
+    print(keykey.getKeyIdHexString())
+    print(keykey.exportPublicKeyPem())
+    print(keykey.exportPrivateKeyPem(b"123"))
+    keykey.exportPublicKeyToFile("keykeypub.pem")
+    keykey.exportPrivateKeyToFile("keykeypriv.pem", b"123")
 
-# Eample for saveToFile and loadFromFile
-keyring.saveToFile("keyring.bin", b"123456")
-keyring_loaded = Keyring.loadFromFile("keyring.bin", b"123456")
-keykey = keyring_loaded.getKeyById(key4.getKeyId())
-print(keykey.getKeyIdHexString())
-print(keykey.exportPublicKeyPem())
-print(keykey.exportPrivateKeyPem(b"123"))
-keykey.exportPublicKeyToFile("keykeypub.pem")
-keykey.exportPrivateKeyToFile("keykeypriv.pem", b"123")
+    #create new keyring
+    password = b"123"
+    privateKeyring = Keyring(True)
+    publicKeyring = Keyring(False)
+
+    privateKeyring.saveToFile("private_keyring.bin", password)
+    publicKeyring.saveToFile("public_keyring.bin", password)
+    
+    #loading keys default
+    password = b"123"
+    privateKeyring = Keyring.loadFromFile("private_keyring.bin", password)
+    publicKeyring = Keyring.loadFromFile("public_keyring.bin", password)
+
+    if privateKeyring is None or publicKeyring is None:
+        print("Wrong password")
