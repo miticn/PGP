@@ -20,6 +20,12 @@ class Keyring:
         
         return None
     
+    def isPrivate(self):
+        return self._private
+    
+    def getKeys(self):
+        return self._keys
+
     def __serialize(self):
         return pickle.dumps(self)
     
