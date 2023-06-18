@@ -2,10 +2,15 @@ import sys
 import os
 from datetime import datetime
 from PyQt5.uic import loadUi
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtWidgets import QDialog, QApplication, QMainWindow
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QFileDialog, QButtonGroup
+from PyQt5.QtWidgets import QListWidgetItem
+from PyQt5.QtWidgets import QListWidget, QListWidgetItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
+
+
 
 # Get the absolute path of the project's root directory
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -37,20 +42,23 @@ class MainWindow(QMainWindow):
         # self.actionRemove_existing_Key.triggered.connect(self.goToRemoveExistingKey)
         # self.actionImport_Key_2.triggered.connect(self.goToImportKey)
         # self.actionExport_Key_2.triggered.connect(self.goToExportKey)
-        self.actionShow_Keyrings.triggered.connect(self.goToShowKeyrings)
 
         # Messages
         self.actionSend_Message.triggered.connect(self.goToSendMessage)
         self.actionReceive_Message.triggered.connect(self.goToReceiveMessage)
+        
+        # Update the ListView with existing private keys
+        private_keys_lv = self.privateKeysLV
+        model = QStandardItemModel()
+        private_keys_lv.setModel(model)
+        model.clear()  # Clear the existing items
+        for private_key in privateKeyring.getKeys():
+            item = QStandardItem(f"{private_key.name} ({private_key.email})")
+            model.appendRow(item)
 
     def goToGenerateNewKey(self):
         generateNewKey = GenerateNewKey()
         widget.addWidget(generateNewKey)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
-    
-    def goToShowKeyrings(self):
-        keyrings = Keyrings()
-        widget.addWidget(keyrings)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
     def goToSendMessage(self):
@@ -85,6 +93,9 @@ class GenerateNewKey(QDialog):
         self.backButton.clicked.connect(self.back)
         self.generateButton.clicked.connect(self.goToSavePrivateKey)
 
+
+
+
     def goToSavePrivateKey(self):
         button_group = QButtonGroup()
         button_group.addButton(self.RB1024, 0)
@@ -92,18 +103,18 @@ class GenerateNewKey(QDialog):
 
         selected_algorithm = self.algorithmCB.currentText()
 
-        if selected_algorithm == "RSA":
-            print("\n\tA: RSA___" + self.algorithmCB.currentText() + "\n")
-        else:
-            print("\n\tB: ELGAMALDSA___" + self.algorithmCB.currentText() + "\n")
+        # if selected_algorithm == "RSA":
+        #     print("\n\tA: RSA___" + self.algorithmCB.currentText() + "\n")
+        # else:
+        #     print("\n\tB: ELGAMALDSA___" + self.algorithmCB.currentText() + "\n")
 
 
-        id = button_group.checkedId()
-        if id == -1:
+        self.id = button_group.checkedId()
+        if self.id == -1:
             print("No radio button selected")
-        elif id == 0:
+        elif self.id == 0:
             print("Radio button '1024' selected")
-        elif id == 1:
+        elif self.id == 1:
             print("Radio button '2048' selected")
 
         if self.nameTB.text().strip() == "" or self.emailTB.text().strip() == "" or id == -1:
@@ -120,43 +131,6 @@ class GenerateNewKey(QDialog):
         current_index = widget.currentIndex()
 
         # Remove the widget at the current index
-        widget.removeWidget(widget.widget(current_index))
-
-
-
-
-class Keyrings(QDialog):
-    def __init__(self):
-        super(Keyrings, self).__init__()
-        
-        ui_file = os.path.join(script_dir, "keyrings.ui")
-        loadUi(ui_file, self)
-        
-        self.UiComponents()
-
-    # Method for widgets
-    def UiComponents(self):
-        self.backButton.clicked.connect(self.back)
-        #self.browseFileButton.clicked.connect(self.<foo>)
-        self.showPrivateKeysButton.clicked.connect(self.goToEnterPassword)
-
-    def goToEnterPassword(self):
-        enterPassword = EnterPassword()
-        widget.addWidget(enterPassword)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
-
-
-    # Action method
-    def getBackToMainWindow(self):
-        current_index = widget.currentIndex()
-        widget.removeWidget(widget.widget(current_index))
-        current_index = widget.currentIndex()
-        widget.removeWidget(widget.widget(current_index))
-
-
-    # Action method
-    def back(self):
-        current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
 
 
@@ -221,9 +195,6 @@ class SavePrivateKey(QDialog):
         print(f"Email: {email}")
         print(f"ID: {id}")
 
-
-
-
     # Action method
     def getBackToMainWindow(self):
         if self.passwordTB.text().strip() == "" or self.confirmPasswordTB.text().strip() == "":
@@ -233,13 +204,29 @@ class SavePrivateKey(QDialog):
             self.errorLabel.setText("Passwords do NOT match.")
             self.errorLabel.setStyleSheet("color: red;")
         else:
+            name = self.generateNewKey.nameTB.text()
+            email = self.generateNewKey.emailTB.text()
+            id = self.generateNewKey.id
+
             # Passwords match
             password = self.passwordTB.text().encode()
             timestamp = datetime.now()
-            public_key = RSA.generate(1024)
-            private_key = PrivateKeyWrapper(timestamp, public_key, "Peter", "example@example.com", RSACipher(), password)
+
+            if self.generateNewKey.id == 0:
+                public_key = RSA.generate(1024)
+            else:
+                public_key = RSA.generate(2048)
+
+            private_key = PrivateKeyWrapper(timestamp, public_key, name, email, RSACipher(), password)
 
             privateKeyring.addKey(private_key)
+            
+            # Update the ListView in the MainWindow
+            main_window = widget.widget(0)  # Assuming MainWindow is at index 0
+            private_keys_lv = main_window.privateKeysLV
+            model = private_keys_lv.model()
+            item = QStandardItem(f"{private_key.name} ({private_key.email})")
+            model.appendRow(item)
 
             current_index = widget.currentIndex()
             widget.removeWidget(widget.widget(current_index))
@@ -333,7 +320,7 @@ widget = QtWidgets.QStackedWidget()
 mainWindow = MainWindow()
 
 widget.addWidget(mainWindow)
-widget.setFixedHeight(350)
+widget.setFixedHeight(380)
 widget.setFixedWidth(600)
 widget.show()
 mainWindow.show()
