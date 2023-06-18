@@ -12,12 +12,18 @@ from Key import PrivateKeyWrapper
 from hash import SHA1Wrapper
 
 class Message():
+    
     message = None
     filename = None
     timestamp = None
 
     loadedBytes = None
     verificationBundle = None
+
+    base64 = False
+    zipped = False
+    encrypted = False
+    signed = False
 
     def __init__(self, arg1:bytes, arg2 = None, arg3 = None):
         if type(arg2) is bytes:
@@ -39,12 +45,16 @@ class Message():
         if self.loadedBytes is None:
             return
         if self.loadedBytes[0:3] == 'r64':
+            self.base64 = True
             self.loadedBytes = self.radix64Decode(self.loadedBytes)
         if self.loadedBytes[0:3] == b'zip':
+            self.zipped = True
             self.loadedBytes = self.decompressMessage(self.loadedBytes)
         if self.loadedBytes[0:4] == b'encr':
+            self.encrypted = True
             self.loadedBytes = self.decryptMessage(self.loadedBytes, recipientPrivateKey, password)
         if self.loadedBytes[0:6] == b'signed':
+            self.signed = True
             self.verificationBundle = copy.deepcopy(self.loadedBytes)
             signatureLength = self.loadedBytes[21:23]
             signatureLength = int.from_bytes(signatureLength, byteorder='big')
