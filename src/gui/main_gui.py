@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-keyring_password = b'12345'
+
 
 # Get the absolute path of the project's root directory
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -26,13 +26,13 @@ from Key import PrivateKeyWrapper
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Initializing keyrings
-privateKeyring = Keyring(True)
-publicKeyring = Keyring(False)
+privateKeyring = None
+publicKeyring = None
+keyring_password = None
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
-        self.setWindowTitle("Main Window Title")  # Set the title for the main window
 
         ui_file = os.path.join(script_dir, "test.ui")
         loadUi(ui_file, self)
@@ -48,13 +48,14 @@ class MainWindow(QMainWindow):
         self.actionReceive_Message.triggered.connect(self.goToReceiveMessage)
         
         # Update the ListView with existing private keys
-        private_keys_lv = self.privateKeysLV
-        model = QStandardItemModel()
-        private_keys_lv.setModel(model)
-        model.clear()  # Clear the existing items
-        for private_key in privateKeyring.getKeys():
-            item = QStandardItem(f"{private_key.name} ({private_key.email})")
-            model.appendRow(item)
+        if privateKeyring is not None:
+            private_keys_lv = self.privateKeysLV
+            model = QStandardItemModel()
+            private_keys_lv.setModel(model)
+            model.clear()  # Clear the existing items
+            for private_key in privateKeyring.getKeys():
+                item = QStandardItem(f"{private_key.name} ({private_key.email})")
+                model.appendRow(item)
 
     def goToGenerateNewKey(self):
         generateNewKey = GenerateNewKey()
@@ -155,8 +156,14 @@ class EnterPassword(QDialog):
     def goToShowPrivateKeyring(self):
 
         # Check if Password matches
-
-        # Go back one level at the end
+        # if self.passwordTB.text().strip() == "":
+        #     self.errorLabel.setText("You must enter password.")
+        #     self.errorLabel.setStyleSheet("color: red;")
+        # elif self.passwordTB.text() != 
+        #     self.errorLabel.setText("Wrong Password")
+        #     self.errorLabel.setStyleSheet("color: red;")
+        # else:
+        #     # Go back one level at the end
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
 
@@ -264,7 +271,19 @@ class SendMessage(QDialog):
 
     def goToSendAndReturn(self):
         message = self.messageTB.toPlainText()  # Get the text from the QTextEdit widget
+        secret  = self.secretCB.isChecked()
+        sign = self.signCB.isChecked()
+        zip = self.zipCB.isChecked()
+        r64 = self.R64CB.isChecked()
 
+        if sign:
+            enterPassword = EnterPassword()
+            widget.addWidget(enterPassword)
+            widget.setCurrentIndex(widget.currentIndex() + 1)
+
+            
+
+        
         # Save the message to a file
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Message", "", "Text Files (*.txt)")
         if file_path:
@@ -295,7 +314,7 @@ class ReceiveMessage(QDialog):
     def UiComponents(self):
         self.backButton.clicked.connect(self.back)
         self.browseFileButton.clicked.connect(self.browse_file)
-        # self.saveFileButton.clicked.connect(self.goToSaveFileAndReturnToMain)
+        self.saveFileButton.clicked.connect(self.goToSaveFileAndReturnToMain)
 
         # self.decryptionEmptyLabel.setText('DaLiJeUpsesno')
         # self.verificationLabel.setText('DaLiJeUpsesno')
@@ -307,9 +326,14 @@ class ReceiveMessage(QDialog):
                 content = file.read()
                 self.textEdit.setText(content)
 
-    def goToSaveFileAndReturnToMain(self):
-        
+
+    def goToSaveFileAndReturnToMain(self): 
         # Check where to save
+        # Save the message to a file
+        file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Text Files (*.txt)")
+        if file_path:
+            with open(file_path, 'w') as file:
+                file.write(self.textEdit.toPlainText())
 
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
@@ -323,12 +347,42 @@ class FirstWindow(QMainWindow):
     def __init__(self):
         super(FirstWindow, self).__init__()
 
-        ui_file = os.path.join(script_dir, "unlock.ui")
-        loadUi(ui_file, self)
+        ring_folder_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'Ring'))
 
-        self.unlockButton.clicked.connect(self.openMainWindow)
+        if len(os.listdir(ring_folder_path)) == 0:
+            ui_file = os.path.join(script_dir, "makePass.ui")
+            loadUi(ui_file, self)
+            self.makeButton.clicked.connect(self.CheckAndOpenMainWindow)
+        else:
+            ui_file = os.path.join(script_dir, "unlock.ui")
+            loadUi(ui_file, self)
+            self.unlockButton.clicked.connect(self.openMainWindow)
+        
+    def CheckAndOpenMainWindow(self):
+        global privateKeyring, publicKeyring, keyring_password
+
+        if self.passwordTB.text().strip() == "" or self.confirmPasswordTB.text().strip() == "":
+            self.errorLabel.setText("You must fill both fields.")
+            self.errorLabel.setStyleSheet("color: red;")
+        elif self.passwordTB.text() != self.confirmPasswordTB.text():
+            self.errorLabel.setText("Passwords do NOT match.")
+            self.errorLabel.setStyleSheet("color: red;")
+        else:
+            keyring_password = self.passwordTB.text().encode()
+            privateKeyring = Keyring(True)
+            publicKeyring = Keyring(False)
+            
+            # Save in files
+            privateKeyring.saveToFile("../Ring/private_keyring.bin", keyring_password)
+            publicKeyring.saveToFile("../Ring/public_keyring.bin", keyring_password)
+
+            main_window = MainWindow()
+            widget.addWidget(main_window)
+            widget.setCurrentIndex(widget.currentIndex() + 1)
+            self.close()
 
     def openMainWindow(self):
+        global keyring_password  # Declare keyring_password as global
         entered_password = self.passwordTB.text().encode()
 
         if self.passwordTB.text().strip() == "":
@@ -342,6 +396,9 @@ class FirstWindow(QMainWindow):
             widget.addWidget(main_window)
             widget.setCurrentIndex(widget.currentIndex() + 1)
             self.close()
+
+
+
 
 
 # main
