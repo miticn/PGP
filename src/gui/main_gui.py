@@ -28,7 +28,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 # Initializing keyrings
 privateKeyring = None
 publicKeyring = None
-keyring_password = None
+keyring_password = b'123'
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -385,6 +385,7 @@ class FirstWindow(QMainWindow):
         global keyring_password  # Declare keyring_password as global
         entered_password = self.passwordTB.text().encode()
 
+        print("ovde")
         if self.passwordTB.text().strip() == "":
             self.errorLabel.setText("You must enter the password.")
             self.errorLabel.setStyleSheet("color: red;")
