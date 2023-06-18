@@ -226,7 +226,7 @@ class SavePrivateKey(QDialog):
             privateKeyring.addKey(private_key)
 
             # Update the ListView in the MainWindow
-            main_window = widget.widget(0)  # Assuming MainWindow is at index 0
+            main_window = widget.widget(1)  # Assuming MainWindow is at index 0
             private_keys_lv = main_window.privateKeysLV
             model = private_keys_lv.model()
 
@@ -328,10 +328,19 @@ class FirstWindow(QMainWindow):
         self.unlockButton.clicked.connect(self.openMainWindow)
 
     def openMainWindow(self):
-        main_window = MainWindow()
-        widget.addWidget(main_window)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
-        self.close()
+        entered_password = self.passwordTB.text().encode()
+
+        if self.passwordTB.text().strip() == "":
+            self.errorLabel.setText("You must enter the password.")
+            self.errorLabel.setStyleSheet("color: red;")
+        elif entered_password != keyring_password:
+            self.errorLabel.setText("Wrong password")
+            self.errorLabel.setStyleSheet("color: red;")
+        else:
+            main_window = MainWindow()
+            widget.addWidget(main_window)
+            widget.setCurrentIndex(widget.currentIndex() + 1)
+            self.close()
 
 
 # main
