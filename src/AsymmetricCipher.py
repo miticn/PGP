@@ -79,19 +79,48 @@ class RSACipher(AsymmetricCipher):
     
     
 class ElGamalDSAKey:
-    def __init__(self, ElgamalKey : object, DSAKey : DSA.DsaKey):
+    def __init__(self, ElgamalKey : ElGamal.ElGamalKey, DSAKey : DSA.DsaKey, size_in_bits = None):
+        self.size = size_in_bits
         self.ElgamalKey = ElgamalKey
         self.DSAKey = DSAKey
+
     def export_key(self, format="PEM", passphrase=None, pkcs=None, protection=None):
         if format == "DER":
-            return self.DSAKey.export_key(format, passphrase, pkcs, protection)
+            return self.DSAKey.export_key(format, passphrase)
         elgamalExport = ElGamalHelper.export_key(self.ElgamalKey, passphrase)
         
-        return self.DSAKey.export_key(format, passphrase, pkcs, protection) +b'\n'+ elgamalExport
+        return self.DSAKey.export_key(format,pkcs8=pkcs,protection=protection ,passphrase=passphrase) +b'\n'+ elgamalExport
+    
+    def import_key(key, passphrase=None):
+        #write analog to RSAKey
+        #separate DSA and ElGamal keys
+
+        #find secound begin
+        begin = key.find(b"-----BEGIN")
+        begin = key.find(b"-----BEGIN", begin+1)
+
+        #separate on begin
+        dsaPem = key[:begin]
+        elgamalPem = key[begin:]
+        #print(dsaPem)
+        #print(elgamalPem)
+        try:
+            ElgamalKey = ElGamalHelper.import_key(elgamalPem, passphrase=passphrase)
+        except:
+            print("Failed to import ElGamal key")
+        try:
+            DSAKey = DSA.import_key(dsaPem, passphrase=passphrase)
+        except:
+            print("Failed to import DSA key")
+        return ElGamalDSAKey(ElgamalKey, DSAKey)
+
+
+
     def public_key(self):
-        return ElGamalDSAKey(self.ElgamalKey.public_key(), self.DSAKey.public_key())
+        return ElGamalDSAKey(self.ElgamalKey.publickey(), self.DSAKey.public_key())
+    
     def size_in_bits(self):
-        return self.DSAKey.size_in_bits()
+        return self.size
     
     def get_elgamal_p(self):
         return self.ElgamalKey.p
@@ -107,8 +136,9 @@ class ElGamalDSAKey:
     
     @staticmethod
     def generate(bits, randfunc=None):
-        ElgamalKey = ElGamal.generate(bits,  get_random_bytes)
+        import os
         DSAKey = DSA.generate(bits, randfunc)
+        ElgamalKey = ElGamal.generate(bits,  os.urandom)
 
         return ElGamalDSAKey(ElgamalKey, DSAKey)
 

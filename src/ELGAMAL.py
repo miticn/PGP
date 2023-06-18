@@ -33,13 +33,14 @@ class ElGamalHelper:
         return bytes(pem_data, 'ascii')
 
     def import_key(pem_data, passphrase=None):
+        private = pem_data.startswith(b'-----BEGIN ENCRYPTED PRIVATE KEY-----')
         pem_data = pem_data.decode('ascii')
         pem_data = pem_data.strip().split('\n')[1:-1]
         pem_data = ''.join(pem_data).encode('ascii')
 
         der = base64.decodebytes(pem_data)
-
-        if passphrase and pem_data.startswith(b'-----BEGIN ENCRYPTED PRIVATE KEY-----'):
+        
+        if passphrase and private:
             der = AESGCipher.decryptWithPassword(passphrase, der)
             if der is None:
                 return "Error: Wrong passphrase!"
