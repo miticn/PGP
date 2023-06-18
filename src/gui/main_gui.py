@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import QListWidgetItem
 from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
-
+keyring_password = b'12345'
 
 # Get the absolute path of the project's root directory
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -207,25 +207,32 @@ class SavePrivateKey(QDialog):
             name = self.generateNewKey.nameTB.text()
             email = self.generateNewKey.emailTB.text()
             id = self.generateNewKey.id
+            bits = 0
+
+            if self.generateNewKey.id == 0:
+                bits = 1024
+            else:
+                bits = 2048
+
+            selected_algorithm = self.generateNewKey.algorithmCB.currentText()  # Get the selected algorithm
 
             # Passwords match
             password = self.passwordTB.text().encode()
             timestamp = datetime.now()
-
-            if self.generateNewKey.id == 0:
-                public_key = RSA.generate(1024)
-            else:
-                public_key = RSA.generate(2048)
+            public_key = RSA.generate(bits)
 
             private_key = PrivateKeyWrapper(timestamp, public_key, name, email, RSACipher(), password)
 
             privateKeyring.addKey(private_key)
-            
+
             # Update the ListView in the MainWindow
             main_window = widget.widget(0)  # Assuming MainWindow is at index 0
             private_keys_lv = main_window.privateKeysLV
             model = private_keys_lv.model()
-            item = QStandardItem(f"{private_key.name} ({private_key.email})")
+
+            item = QStandardItem(
+                f"{private_key.name} ({private_key.email})[{timestamp}, {selected_algorithm}: {bits}] ID: {repr(private_key.getKeyIdHexString())}"
+            )
             model.appendRow(item)
 
             current_index = widget.currentIndex()
@@ -311,22 +318,37 @@ class ReceiveMessage(QDialog):
         widget.removeWidget(widget.widget(current_index))
 
 
+class FirstWindow(QMainWindow):
+    def __init__(self):
+        super(FirstWindow, self).__init__()
+
+        ui_file = os.path.join(script_dir, "unlock.ui")
+        loadUi(ui_file, self)
+
+        self.unlockButton.clicked.connect(self.openMainWindow)
+
+    def openMainWindow(self):
+        main_window = MainWindow()
+        widget.addWidget(main_window)
+        widget.setCurrentIndex(widget.currentIndex() + 1)
+        self.close()
+
+
 # main
 app = QApplication(sys.argv)
 
 app.setApplicationDisplayName("PGP Mitic-Davidovic")
 
 widget = QtWidgets.QStackedWidget()
-mainWindow = MainWindow()
+firstWindow = FirstWindow()
 
-widget.addWidget(mainWindow)
+widget.addWidget(firstWindow)
 widget.setFixedHeight(380)
 widget.setFixedWidth(600)
 widget.show()
-mainWindow.show()
+firstWindow.show()
 
 try:
     sys.exit(app.exec_())
-
 except:
     print("Exiting")
