@@ -229,9 +229,10 @@ class SavePrivateKey(QDialog):
             main_window = widget.widget(1)  # Assuming MainWindow is at index 0
             private_keys_lv = main_window.privateKeysLV
             model = private_keys_lv.model()
+            print_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
             item = QStandardItem(
-                f"{private_key.name} ({private_key.email})[{timestamp}, {selected_algorithm}: {bits}] ID: {repr(private_key.getKeyIdHexString())}"
+                f"{private_key.name} ({private_key.email})[{print_timestamp}, {selected_algorithm}: {bits}] ID: {repr(private_key.getKeyIdHexString())}"
             )
             model.appendRow(item)
 
