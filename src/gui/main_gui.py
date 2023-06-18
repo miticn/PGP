@@ -21,8 +21,8 @@ sys.path.append(root_dir)
 from Keyring import Keyring
 from AsymmetricCipher import *
 from Key import PrivateKeyWrapper
-
-
+from Message import Message
+from SymmetricCipher import AESCipher, TripleDES
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # Initializing keyrings
@@ -262,19 +262,57 @@ class SendMessage(QDialog):
         ui_file = os.path.join(script_dir, "sendMessage.ui")
         loadUi(ui_file, self)
 
+        self.publicKeyComboBox.setEnabled(False)
+        self.symAlgoComboBox.setEnabled(False)
+        self.privateKeyComboBox.setEnabled(False)
+        self.passwordTB.setEnabled(False)
+
+        #self.symAlgoComboBox.addItem("Select symmetric algorithm")
+        #load the public keys
+        #self.publicKeyComboBox.addItem("Select public key")
+        for key in publicKeyring.getKeys():
+            self.publicKeyComboBox.addItem(f"{key.name} ({key.email}), ID: {repr(key.getKeyIdHexString())}")
+
+        #load the private keys
+        #self.privateKeyComboBox.addItem("Select private key")
+        for key in privateKeyring.getKeys():
+            self.privateKeyComboBox.addItem(f"{key.name} ({key.email}), ID: {repr(key.getKeyIdHexString())}")
+            self.publicKeyComboBox.addItem(f"{key.name} ({key.email}), ID: {repr(key.getKeyIdHexString())}")
         self.UiComponents()
 
     # Method for widgets
     def UiComponents(self):
         self.backButton.clicked.connect(self.back)
         self.sendMessageButton.clicked.connect(self.goToSendAndReturn)
+        self.secretCB.stateChanged.connect(self.secretCBChanged)
+        self.signCB.stateChanged.connect(self.signCBChanged)
 
     def goToSendAndReturn(self):
         message = self.messageTB.toPlainText()  # Get the text from the QTextEdit widget
-        secret  = self.secretCB.isChecked()
-        sign = self.signCB.isChecked()
-        zip = self.zipCB.isChecked()
-        r64 = self.R64CB.isChecked()
+        isSecret = self.secretCB.isChecked()
+        isSigned = self.signCB.isChecked()
+        isCompressed = self.ZIPCB.isChecked()
+        isRadix64 = self.R64CB.isChecked()
+        password = None
+        algo = None
+        sender_key = None
+        receiver_key = None
+        if isSecret:
+            receiver_key = publicKeyring.getKeyById(self.publicKeyComboBox.currentText().split("ID: ")[1])
+            algo = self.symAlgoComboBox.currentText()
+            if algo == "TripleDES":
+                algo = TripleDES()
+            elif algo == "AES":
+                algo = AESCipher()
+        
+        if isSigned:
+            sender_key = privateKeyring.getKeyById(self.privateKeyComboBox.currentText().split("ID: ")[1])
+            password = self.passwordTB.text().encode()
+
+
+        self.publicKeyComboBox
+        message = message.encode()
+        msg = Message(b"filename",message)
 
         if sign:
             enterPassword = EnterPassword()
@@ -287,8 +325,9 @@ class SendMessage(QDialog):
         # Save the message to a file
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Message", "", "Text Files (*.txt)")
         if file_path:
-            with open(file_path, 'w') as file:
-                file.write(message)
+            out = msg.createOuputBytes(signed=isSigned, senderKey=sender_key, zipped=isCompressed, base64=isRadix64, encrypted=isSecret, receiverKey=receiver_key, symmetricCipher=algo, password=password)
+            with open(file_path, 'wb') as file:
+                file.write(out)
 
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
@@ -297,6 +336,24 @@ class SendMessage(QDialog):
     def back(self):
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
+    
+    def secretCBChanged(self):
+        if self.secretCB.isChecked():
+            self.publicKeyComboBox.setEnabled(True)
+            self.symAlgoComboBox.setEnabled(True)
+        else:
+            self.publicKeyComboBox.setEnabled(False)
+            self.symAlgoComboBox.setEnabled(False)
+            
+
+
+    def signCBChanged(self):
+        if self.signCB.isChecked():
+            self.privateKeyComboBox.setEnabled(True)
+            self.passwordTB.setEnabled(True)
+        else:
+            self.privateKeyComboBox.setEnabled(False)
+            self.passwordTB.setEnabled(False)
 
 
 
