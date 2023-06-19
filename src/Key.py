@@ -181,7 +181,7 @@ class PrivateKeyWrapper(PublicKeyWrapper):
                 privateKey = ElGamalDSAKey.import_key(data, passphrase=password)
                 return True, PrivateKeyWrapper(state['timestamp'], privateKey, state['name'], state['email'], ElGamalDSACipher(), password)
             except:
-                False, None
+                return False, None
 
     @staticmethod
     def importPrivateKeyFromFile(filename, password):
