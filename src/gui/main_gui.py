@@ -158,7 +158,13 @@ class MainWindow(QMainWindow):
                 is_private = PublicKeyWrapper.isPrivateKey(file_path)
 
                 if is_private:
-                    print("privatan")
+                    status, private = PrivateKeyWrapper.importPrivateKeyFromFile(file_path)
+                    if status:
+                        privateKeyring.addKey(private)
+                        #load password here
+                        password = b'123'
+                        privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", password)
+                        self.listKeys()
                 else:
                     status, public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
                     if status:
