@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
-
+myPath = ".."
 # Get the absolute path of the project's root directory
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -25,10 +25,6 @@ from Message import Message
 from SymmetricCipher import AESCipher, TripleDES
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Initializing keyrings
-privateKeyring = None
-publicKeyring = None
-keyring_password = b'123'
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -205,6 +201,7 @@ class SavePrivateKey(QDialog):
     # Action method
     def getBackToMainWindow(self):
         global privateKeyring, publicKeyring, keyring_password
+        print(globals())
         if self.passwordTB.text().strip() == "" or self.confirmPasswordTB.text().strip() == "":
             self.errorLabel.setText("You must fill both fields.")
             self.errorLabel.setStyleSheet("color: red;")
@@ -232,7 +229,7 @@ class SavePrivateKey(QDialog):
             private_key = PrivateKeyWrapper(timestamp, public_key, name, email, RSACipher(), password)
 
             privateKeyring.addKey(private_key)
-
+            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
             # Update the ListView in the MainWindow
             main_window = widget.widget(1)  # Assuming MainWindow is at index 0
             private_keys_lv = main_window.privateKeysLV
@@ -431,8 +428,8 @@ class FirstWindow(QMainWindow):
             publicKeyring = Keyring(False)
             
             # Save in files
-            privateKeyring.saveToFile("../Ring/private_keyring.bin", keyring_password)
-            publicKeyring.saveToFile("../Ring/public_keyring.bin", keyring_password)
+            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+            publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
 
             main_window = MainWindow()
             widget.addWidget(main_window)
@@ -442,19 +439,17 @@ class FirstWindow(QMainWindow):
     def openMainWindow(self):
         global keyring_password  # Declare keyring_password as global
         entered_password = self.passwordTB.text().encode()
-
+        global privateKeyring, publicKeyring
+        privateKeyring = Keyring.loadFromFile(myPath+"/Ring/private_keyring.bin", entered_password)
+        publicKeyring = Keyring.loadFromFile(myPath+"/Ring/public_keyring.bin", entered_password)
         
         if self.passwordTB.text().strip() == "":
             self.errorLabel.setText("You must enter the password.")
             self.errorLabel.setStyleSheet("color: red;")
-        elif entered_password != keyring_password:
+        elif privateKeyring is None or publicKeyring is None:
             self.errorLabel.setText("Wrong password")
             self.errorLabel.setStyleSheet("color: red;")
         else:
-
-            privateKeyring = Keyring.loadFromFile("../Ring/private_keyring.bin", keyring_password)
-            publicKeyring = Keyring.loadFromFile("../Ring/public_keyring.bin", keyring_password)
-
             main_window = MainWindow()
             widget.addWidget(main_window)
             widget.setCurrentIndex(widget.currentIndex() + 1)
@@ -465,20 +460,26 @@ class FirstWindow(QMainWindow):
 
 
 # main
-app = QApplication(sys.argv)
+if __name__ == "__main__":
 
-app.setApplicationDisplayName("PGP Mitic-Davidovic")
+    # Initializing keyrings
+    privateKeyring = None
+    publicKeyring = None
+    keyring_password = b'1234'
+    app = QApplication(sys.argv)
 
-widget = QtWidgets.QStackedWidget()
-firstWindow = FirstWindow()
+    app.setApplicationDisplayName("PGP Mitic-Davidovic")
 
-widget.addWidget(firstWindow)
-widget.setFixedHeight(380)
-widget.setFixedWidth(600)
-widget.show()
-firstWindow.show()
+    widget = QtWidgets.QStackedWidget()
+    firstWindow = FirstWindow()
 
-try:
-    sys.exit(app.exec_())
-except:
-    print("Exiting")
+    widget.addWidget(firstWindow)
+    widget.setFixedHeight(380)
+    widget.setFixedWidth(600)
+    widget.show()
+    firstWindow.show()
+
+    try:
+        sys.exit(app.exec_())
+    except:
+        print("Exiting")

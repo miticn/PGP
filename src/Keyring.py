@@ -43,6 +43,8 @@ class Keyring:
         with open(filename, "rb") as f:
             encrypted_bytes = f.read()
             decrypted_bytes = AESGCipher.decryptWithPassword(password, encrypted_bytes)
+            if decrypted_bytes is None:
+                return None
             return Keyring.__deserialize(decrypted_bytes)
 
 
