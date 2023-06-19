@@ -112,12 +112,12 @@ class ElGamalDSAKey:
             DSAKey = DSA.import_key(dsaPem, passphrase=passphrase)
         except:
             print("Failed to import DSA key")
-        return ElGamalDSAKey(ElgamalKey, DSAKey)
+        return ElGamalDSAKey(ElgamalKey, DSAKey, size_in_bits=1024)
 
 
 
     def public_key(self):
-        return ElGamalDSAKey(self.ElgamalKey.publickey(), self.DSAKey.public_key())
+        return ElGamalDSAKey(self.ElgamalKey.publickey(), self.DSAKey.public_key(), self.size)
     
     def size_in_bits(self):
         return self.size

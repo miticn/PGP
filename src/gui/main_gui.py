@@ -149,7 +149,7 @@ class MainWindow(QMainWindow):
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
-                password = b'123'
+                password = b'1'
                 receiver_key.exportPrivateKeyToFile(file_path, password)
 
         else:
@@ -162,11 +162,11 @@ class MainWindow(QMainWindow):
                 is_private = PublicKeyWrapper.isPrivateKey(file_path)
 
                 if is_private:
-                    status, private = PrivateKeyWrapper.importPrivateKeyFromFile(file_path)
+                    #load password here
+                    password = b'1'
+                    status, private = PrivateKeyWrapper.importPrivateKeyFromFile(file_path, password)
                     if status:
                         privateKeyring.addKey(private)
-                        #load password here
-                        password = b'123'
                         saveKeyrings()
                         self.listKeys()
                 else:
