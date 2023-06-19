@@ -161,7 +161,7 @@ class PrivateKeyWrapper(PublicKeyWrapper):
         return False
     
     def checkPassword(self, password):
-        return self.__decryptPrivateKey(password) is None
+        return self.__decryptPrivateKey(password) is not None
     
     @staticmethod
     def importPrivateKeyPem(data, password):

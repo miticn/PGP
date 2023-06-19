@@ -373,6 +373,8 @@ class SendMessage(QDialog):
             if not sender_key.checkPassword(password):
                 self.errorLabel.setText("Wrong password")
                 return
+            
+            print(sender_key)
 
             
 
