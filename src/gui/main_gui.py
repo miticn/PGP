@@ -204,6 +204,7 @@ class SavePrivateKey(QDialog):
 
     # Action method
     def getBackToMainWindow(self):
+        global privateKeyring, publicKeyring, keyring_password
         if self.passwordTB.text().strip() == "" or self.confirmPasswordTB.text().strip() == "":
             self.errorLabel.setText("You must fill both fields.")
             self.errorLabel.setStyleSheet("color: red;")
@@ -442,7 +443,7 @@ class FirstWindow(QMainWindow):
         global keyring_password  # Declare keyring_password as global
         entered_password = self.passwordTB.text().encode()
 
-        print("ovde")
+        
         if self.passwordTB.text().strip() == "":
             self.errorLabel.setText("You must enter the password.")
             self.errorLabel.setStyleSheet("color: red;")
@@ -450,6 +451,10 @@ class FirstWindow(QMainWindow):
             self.errorLabel.setText("Wrong password")
             self.errorLabel.setStyleSheet("color: red;")
         else:
+
+            privateKeyring = Keyring.loadFromFile("../Ring/private_keyring.bin", keyring_password)
+            publicKeyring = Keyring.loadFromFile("../Ring/public_keyring.bin", keyring_password)
+
             main_window = MainWindow()
             widget.addWidget(main_window)
             widget.setCurrentIndex(widget.currentIndex() + 1)
