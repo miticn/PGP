@@ -73,7 +73,9 @@ class MainWindow(QMainWindow):
 
 
     def goToExportPublicKey(self):
-        selected_indexes = self.privateKeysLV.selectedIndexes()
+        private = self.privateKeysLV.selectedIndexes()
+        public  = self.publicKeysLV.selectedIndexes()
+
         if selected_indexes:
             selected_index = selected_indexes[0]
             selected_item_data = self.privateKeysLV.model().data(selected_index)
@@ -89,7 +91,7 @@ class MainWindow(QMainWindow):
             keyId = selected_item_data.split("ID: ")[1].strip("'")
             receiver_key = privateKeyring.getKeyByKeyIdHexString(keyId)
 
-            file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Text Files (*.txt)")
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
                 receiver_key.exportPublicKeyToFile(file_path)
 
