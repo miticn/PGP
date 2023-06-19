@@ -27,6 +27,14 @@ class Keyring:
         
         return None
     
+    def removeKeyByKeyIdHexString(self, keyID):
+        for key in self._keys:
+            if keyID == key.getKeyIdHexString():
+                self._keys.remove(key)
+                return True
+        
+        return False
+    
     def isPrivate(self):
         return self._private
     

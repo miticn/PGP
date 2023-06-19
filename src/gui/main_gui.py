@@ -39,12 +39,16 @@ class MainWindow(QMainWindow):
         self.importKeyMenuBar.triggered.connect(self.goToImportKey)
         self.exportPublicKeyMenuBar.triggered.connect(self.goToExportPublicKey)
         self.exportPrivateKeyMenuBar.triggered.connect(self.goToExportPrivateKey)
+        self.actionRemove_existing_Key.triggered.connect(self.goToDeleteKey)
 
         # Messages
         self.actionSend_Message.triggered.connect(self.goToSendMessage)
         self.actionReceive_Message.triggered.connect(self.goToReceiveMessage)
         
         # Update the ListView with existing private keys
+        self.listKeys()
+    
+    def listKeys(self):
         if privateKeyring is not None:
             private_keys_lv = self.privateKeysLV
             model = QStandardItemModel()
@@ -57,6 +61,39 @@ class MainWindow(QMainWindow):
                 selected_algorithm = "RSA" if selected_algorithm == b'\x01' else "ElGamalDSA"
                 item = QStandardItem(f"{private_key.name} ({private_key.email})[{time}, {selected_algorithm}: {private_key.size}] ID: {repr(private_key.getKeyIdHexString())}")
                 model.appendRow(item)
+
+        if publicKeyring is not None:
+            public_keys_lv = self.publicKeysLV
+            model = QStandardItemModel()
+            public_keys_lv.setModel(model)
+            model.clear()
+            print(publicKeyring.getKeys())
+            for public_key in publicKeyring.getKeys():
+                time = public_key.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                selected_algorithm = public_key.algorithm.getAlgorithmCode()
+                selected_algorithm = "RSA" if selected_algorithm == b'\x01' else "ElGamalDSA"
+                item = QStandardItem(f"{public_key.name} ({public_key.email})[{time}, {selected_algorithm}: {public_key.size}] ID: {repr(public_key.getKeyIdHexString())}")
+                model.appendRow(item)
+
+    def goToDeleteKey(self):
+        private = self.privateKeysLV.selectedIndexes()
+        public  = self.publicKeysLV.selectedIndexes()
+        if private:
+            private = private[0]
+            private_data = self.privateKeysLV.model().data(private)
+            keyId = private_data.split("ID: ")[1].strip("'")
+            privateKeyring.removeKeyByKeyIdHexString(keyId)
+            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+
+        if public:
+            public = public[0]
+            public_data = self.publicKeysLV.model().data(public)
+            keyId = public_data.split("ID: ")[1].strip("'")
+            publicKeyring.removeKeyByKeyIdHexString(keyId)
+            publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+        
+        self.listKeys()
+
 
     def goToGenerateNewKey(self):
         generateNewKey = GenerateNewKey()
@@ -123,9 +160,11 @@ class MainWindow(QMainWindow):
                 if is_private:
                     print("privatan")
                 else:
-                    public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
-                    publicKeyring.addKey(public)
-                    publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+                    status, public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
+                    if status:
+                        publicKeyring.addKey(public)
+                        publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+                        self.listKeys()
 
 
 
