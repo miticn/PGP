@@ -133,6 +133,8 @@ class MainWindow(QMainWindow):
             keyId = public_data.split("ID: ")[1].strip("'")
             receiver_key = publicKeyring.getKeyByKeyIdHexString(keyId)
 
+            # HERE CHAT GPT!!!
+
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
                 receiver_key.exportPublicKeyToFile(file_path)
@@ -150,6 +152,11 @@ class MainWindow(QMainWindow):
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
                 password = b'123'
+   
+                enterPassword = EnterPassword(receiver_key)
+                widget.addWidget(enterPassword)
+                widget.setCurrentIndex(widget.currentIndex() + 1)
+
                 receiver_key.exportPrivateKeyToFile(file_path, password)
 
         else:
@@ -241,13 +248,14 @@ class GenerateNewKey(QDialog):
 
 
 class EnterPassword(QDialog):
-    def __init__(self):
+    def __init__(self, receiver_key):
         super(EnterPassword, self).__init__()
 
         ui_file = os.path.join(script_dir, "enterPassword.ui")
         loadUi(ui_file, self)
 
         self.UiComponents()
+        self.receiver_key = receiver_key
 
     # Method for widgets
     def UiComponents(self):
@@ -257,18 +265,13 @@ class EnterPassword(QDialog):
 
     # Action method
     def goToShowPrivateKeyring(self):
-
-        # Check if Password matches
-        # if self.passwordTB.text().strip() == "":
-        #     self.errorLabel.setText("You must enter password.")
-        #     self.errorLabel.setStyleSheet("color: red;")
-        # elif self.passwordTB.text() != 
-        #     self.errorLabel.setText("Wrong Password")
-        #     self.errorLabel.setStyleSheet("color: red;")
-        # else:
-        #     # Go back one level at the end
-        current_index = widget.currentIndex()
-        widget.removeWidget(widget.widget(current_index))
+        if self.passwordTB.text().strip() == "":
+            self.errorLabel.setText("You must enter password.")
+            self.errorLabel.setStyleSheet("color: red;")
+        elif self.receiver_key.checkPassword(self.passwordTB.text().encode()):
+            # Go back one level at the end
+            current_index = widget.currentIndex()
+            widget.removeWidget(widget.widget(current_index))
 
     def back(self): 
         current_index = widget.currentIndex()
