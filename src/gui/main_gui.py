@@ -337,8 +337,13 @@ class SendMessage(QDialog):
                 algo = AESCipher()
         
         if isSigned:
-            sender_key = privateKeyring.getKeyById(self.privateKeyComboBox.currentText().split("ID: ")[1])
+            keyId = self.privateKeyComboBox.currentText().split("ID: ")[1].strip("'")
+            sender_key = privateKeyring.getKeyByKeyIdHexString(keyId)
             password = self.passwordTB.text().encode()
+            if not sender_key.checkPassword(password):
+                self.errorLabel.setText("Wrong password")
+                return
+
             
 
 

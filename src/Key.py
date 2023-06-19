@@ -160,6 +160,9 @@ class PrivateKeyWrapper(PublicKeyWrapper):
                 return True
         return False
     
+    def checkPassword(self, password):
+        return self.__decryptPrivateKey(password) is None
+    
     @staticmethod
     def importPrivateKeyPem(data, password):
         isMetadata, state = PublicKeyWrapper._importMetadata(data)

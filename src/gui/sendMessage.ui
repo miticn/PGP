@@ -215,9 +215,6 @@
    <property name="enabled">
     <bool>true</bool>
    </property>
-   <property name="echoMode">
-    <enum>QLineEdit::Password</enum>
-   </property>
    <property name="geometry">
     <rect>
      <x>390</x>
@@ -227,7 +224,10 @@
     </rect>
    </property>
    <property name="inputMethodHints">
-    <set>Qt::ImhNone</set>
+    <set>Qt::ImhHiddenText|Qt::ImhNoAutoUppercase|Qt::ImhNoPredictiveText|Qt::ImhSensitiveData</set>
+   </property>
+   <property name="echoMode">
+    <enum>QLineEdit::Password</enum>
    </property>
   </widget>
   <widget class="QLabel" name="passwordLabel">
@@ -241,6 +241,22 @@
    </property>
    <property name="text">
     <string>Password</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="errorLabel">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>460</x>
+     <y>180</y>
+     <width>101</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;justify&quot;&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
  </widget>
