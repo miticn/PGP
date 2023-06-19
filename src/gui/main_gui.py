@@ -23,6 +23,7 @@ from AsymmetricCipher import *
 from Key import PrivateKeyWrapper
 from Message import Message
 from SymmetricCipher import AESCipher, TripleDES
+from Key import PrivateKeyWrapper, PublicKeyWrapper
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -49,6 +50,7 @@ class MainWindow(QMainWindow):
             model = QStandardItemModel()
             private_keys_lv.setModel(model)
             model.clear()  # Clear the existing items
+            print(privateKeyring.getKeys())
             for private_key in privateKeyring.getKeys():
                 time = private_key.timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 selected_algorithm = private_key.algorithm.getAlgorithmCode()
@@ -116,15 +118,14 @@ class MainWindow(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select File")
         if file_path:
             with open(file_path, 'r') as file:
-                content = file.read()
-                is_private = content.isPrivateKey(file_path)
+                is_private = PublicKeyWrapper.isPrivateKey(file_path)
 
                 if is_private:
                     print("privatan")
                 else:
-                    public = content.importPublicKeyFromFile(file_path)
+                    public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
                     publicKeyring.addKey(public)
-                    publicKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+                    publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
 
 
 
