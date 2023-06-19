@@ -447,7 +447,11 @@ class ReceiveMessage(QDialog):
         if file_path:
             with open(file_path, 'r') as file:
                 content = file.read()
-                self.textEdit.setText(content)
+
+            msg = Message(content,None,None)
+            
+            
+            self.textBrowser.setText(msg.message.decode())
 
 
     def goToSaveFileAndReturnToMain(self): 

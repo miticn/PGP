@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>589</width>
-    <height>346</height>
+    <height>339</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -124,16 +124,6 @@
     <string>Author:</string>
    </property>
   </widget>
-  <widget class="QTextEdit" name="textEdit">
-   <property name="geometry">
-    <rect>
-     <x>140</x>
-     <y>150</y>
-     <width>361</width>
-     <height>141</height>
-    </rect>
-   </property>
-  </widget>
   <widget class="QPushButton" name="saveFileButton">
    <property name="geometry">
     <rect>
@@ -163,6 +153,16 @@
    </property>
    <property name="text">
     <string>&lt;- Back</string>
+   </property>
+  </widget>
+  <widget class="QTextBrowser" name="textBrowser">
+   <property name="geometry">
+    <rect>
+     <x>135</x>
+     <y>151</y>
+     <width>411</width>
+     <height>131</height>
+    </rect>
    </property>
   </widget>
  </widget>
