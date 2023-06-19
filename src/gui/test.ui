@@ -95,7 +95,7 @@
     <addaction name="actionGenerate_new_Key"/>
     <addaction name="actionRemove_existing_Key"/>
     <addaction name="separator"/>
-    <addaction name="actionImport_Key_2"/>
+    <addaction name="importKeyMenuBar"/>
     <addaction name="exportPrivateKeyMenuBar"/>
     <addaction name="exportPublicKeyMenuBar"/>
     <addaction name="separator"/>
@@ -134,7 +134,7 @@
     <string>Export Key</string>
    </property>
   </action>
-  <action name="actionImport_Key_2">
+  <action name="importKeyMenuBar">
    <property name="text">
     <string>Import Key</string>
    </property>

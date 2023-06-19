@@ -35,7 +35,7 @@ class MainWindow(QMainWindow):
 
         # Keys
         self.actionGenerate_new_Key.triggered.connect(self.goToGenerateNewKey)
-        # self.actionRemove_existing_Key.triggered.connect(self.goToRemoveExistingKey)
+        self.importKeyMenuBar.triggered.connect(self.goToImportKey)
         self.exportPublicKeyMenuBar.triggered.connect(self.goToExportPublicKey)
         self.exportPrivateKeyMenuBar.triggered.connect(self.goToExportPrivateKey)
 
@@ -76,10 +76,24 @@ class MainWindow(QMainWindow):
         private = self.privateKeysLV.selectedIndexes()
         public  = self.publicKeysLV.selectedIndexes()
 
-        if selected_indexes:
-            selected_index = selected_indexes[0]
-            selected_item_data = self.privateKeysLV.model().data(selected_index)
-            print(selected_item_data)
+        if private:
+            private = private[0]
+            private_data = self.privateKeysLV.model().data(private)
+            keyId = private_data.split("ID: ")[1].strip("'")
+            receiver_key = privateKeyring.getKeyByKeyIdHexString(keyId)
+
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
+            if file_path:
+                receiver_key.exportPublicKeyToFile(file_path)
+        elif public:
+            public = public[0]
+            public_data = self.publicKeysLV.model().data(public)
+            keyId = public_data.split("ID: ")[1].strip("'")
+            receiver_key = publicKeyring.getKeyByKeyIdHexString(keyId)
+
+            file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
+            if file_path:
+                receiver_key.exportPublicKeyToFile(file_path)
         else:
             print("No item selected")
 
@@ -93,10 +107,24 @@ class MainWindow(QMainWindow):
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
-                receiver_key.exportPublicKeyToFile(file_path)
+                receiver_key.exportPrivateKeyPem(file_path)
 
         else:
             print("No item selected")
+
+    def goToImportKey(self):
+        file_path, _ = QFileDialog.getOpenFileName(self, "Select File")
+        if file_path:
+            with open(file_path, 'r') as file:
+                content = file.read()
+                is_private = content.isPrivateKey(file_path)
+
+                if is_private:
+                    print("privatan")
+                else:
+                    public = content.importPublicKeyFromFile(file_path)
+                    publicKeyring.addKey(public)
+                    publicKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
 
 
 
