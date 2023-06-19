@@ -146,7 +146,8 @@ class MainWindow(QMainWindow):
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
-                receiver_key.exportPrivateKeyPem(file_path)
+                password = b'123'
+                receiver_key.exportPrivateKeyToFile(file_path, password)
 
         else:
             print("No item selected")
