@@ -50,7 +50,10 @@ class MainWindow(QMainWindow):
             private_keys_lv.setModel(model)
             model.clear()  # Clear the existing items
             for private_key in privateKeyring.getKeys():
-                item = QStandardItem(f"{private_key.name} ({private_key.email})")
+                time = private_key.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                selected_algorithm = private_key.algorithm.getAlgorithmCode()
+                selected_algorithm = "RSA" if selected_algorithm == b'\x01' else "ElGamalDSA"
+                item = QStandardItem(f"{private_key.name} ({private_key.email})[{time}, {selected_algorithm}: {private_key.size}] ID: {repr(private_key.getKeyIdHexString())}")
                 model.appendRow(item)
 
     def goToGenerateNewKey(self):
@@ -237,7 +240,7 @@ class SavePrivateKey(QDialog):
             print_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
 
             item = QStandardItem(
-                f"{private_key.name} ({private_key.email})[{print_timestamp}, {selected_algorithm}: {bits}] ID: {repr(private_key.getKeyIdHexString())}"
+                f"{private_key.name} ({private_key.email})[{private_key.timestamp}, {private_key.algorithm}: {private_key.size}] ID: {repr(private_key.getKeyIdHexString())}"
             )
             model.appendRow(item)
 
@@ -312,18 +315,12 @@ class SendMessage(QDialog):
         message = message.encode()
         msg = Message(b"filename",message)
 
-        if sign:
-            enterPassword = EnterPassword()
-            widget.addWidget(enterPassword)
-            widget.setCurrentIndex(widget.currentIndex() + 1)
-
-            
-
         
         # Save the message to a file
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Message", "", "Text Files (*.txt)")
         if file_path:
             out = msg.createOuputBytes(signed=isSigned, senderKey=sender_key, zipped=isCompressed, base64=isRadix64, encrypted=isSecret, receiverKey=receiver_key, symmetricCipher=algo, password=password)
+            out = out.encode()
             with open(file_path, 'wb') as file:
                 file.write(out)
 
