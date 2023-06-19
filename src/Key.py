@@ -36,6 +36,7 @@ class PublicKeyWrapper():
         if self.algorithm.getAlgorithmCode() == RSACipher.getAlgorithmCode():
             return RSA.import_key(key)
         elif self.algorithm.getAlgorithmCode() == ElGamalDSACipher.getAlgorithmCode():
+            print(key)
             return ElGamalDSAKey.import_key(key)
     
 

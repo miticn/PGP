@@ -112,12 +112,12 @@ class ElGamalDSAKey:
             DSAKey = DSA.import_key(dsaPem, passphrase=passphrase)
         except:
             print("Failed to import DSA key")
-        return ElGamalDSAKey(ElgamalKey, DSAKey)
+        return ElGamalDSAKey(ElgamalKey, DSAKey, size_in_bits=1024)
 
 
 
     def public_key(self):
-        return ElGamalDSAKey(self.ElgamalKey.publickey(), self.DSAKey.public_key())
+        return ElGamalDSAKey(self.ElgamalKey.publickey(), self.DSAKey.public_key(), self.size)
     
     def size_in_bits(self):
         return self.size
@@ -161,6 +161,11 @@ class ElGamalDSACipher(AsymmetricCipher):
         c2 = (plaintext_int * pow(int(y), k, int(p))) % int(p)
 
         ciphertext = (c1, c2)
+        #ciphertext to bytes
+        c1 = long_to_bytes(c1)
+        c2 = long_to_bytes(c2)
+        #make ciphertext parsable
+        ciphertext = c1 + b'   ' + c2
         return ciphertext
 
     @staticmethod
@@ -174,9 +179,12 @@ class ElGamalDSACipher(AsymmetricCipher):
 
     @staticmethod
     def decrypt(ciphertext, private_key):  # ElGamal
+        ciphertext = ciphertext.split(b'   ')
         p = int(private_key.get_elgamal_p())
         x = int(private_key.get_elgamal_private_key())
         c1, c2 = ciphertext
+        c1 = bytes_to_long(c1)
+        c2 = bytes_to_long(c2)
 
         # Convert IntegerCustom objects to integers
         c1 = int(c1)
