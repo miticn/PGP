@@ -133,7 +133,6 @@ class MainWindow(QMainWindow):
             keyId = public_data.split("ID: ")[1].strip("'")
             receiver_key = publicKeyring.getKeyByKeyIdHexString(keyId)
 
-            # HERE CHAT GPT!!!
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
@@ -151,8 +150,6 @@ class MainWindow(QMainWindow):
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
-                password = b'123'
-   
                 enterPassword = EnterPassword(receiver_key, file_path)
                 widget.addWidget(enterPassword)
                 widget.setCurrentIndex(widget.currentIndex() + 1)
@@ -171,12 +168,10 @@ class MainWindow(QMainWindow):
 
                 if is_private:
                     #load password here
-                    password = b'1'
-                    status, private = PrivateKeyWrapper.importPrivateKeyFromFile(file_path, password)
-                    if status:
-                        privateKeyring.addKey(private)
-                        saveKeyrings()
-                        self.listKeys()
+                    enterPassword = EnterPasswordImport(file_path,self)
+                    widget.addWidget(enterPassword)
+                    widget.setCurrentIndex(widget.currentIndex() + 1)
+                    self.listKeys()
                 else:
                     status, public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
                     if status:
@@ -283,7 +278,44 @@ class EnterPassword(QDialog):
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))
 
+class EnterPasswordImport(QDialog):
+    def __init__(self, file_path, main_window):
+        super(EnterPasswordImport, self).__init__()
 
+        ui_file = os.path.join(script_dir, "enterPassword.ui")
+        loadUi(ui_file, self)
+
+        self.UiComponents()
+        self.main_window = main_window
+        self.file_path = file_path
+
+    # Method for widgets
+    def UiComponents(self):
+        self.backButton.clicked.connect(self.back)
+        self.confirmButton.clicked.connect(self.goToShowPrivateKeyring)
+
+
+    # Action method
+    def goToShowPrivateKeyring(self):
+        if self.passwordTB.text().strip() == "":
+            self.errorLabel.setText("You must enter password.")
+            self.errorLabel.setStyleSheet("color: red;")
+        
+        else:
+            status, private = PrivateKeyWrapper.importPrivateKeyFromFile(self.file_path, self.passwordTB.text().encode())
+            # Go back one level at the end
+            if status:
+                print("Password is correct")
+                privateKeyring.addKey(private)
+                saveKeyrings()
+                self.main_window.listKeys()
+                current_index = widget.currentIndex()
+                widget.removeWidget(widget.widget(current_index))
+                    
+
+    def back(self): 
+        current_index = widget.currentIndex()
+        widget.removeWidget(widget.widget(current_index))
 
 
 class SavePrivateKey(QDialog):
