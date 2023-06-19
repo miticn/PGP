@@ -75,7 +75,6 @@ class MainWindow(QMainWindow):
     def goToExportPublicKey(self):
         selected_indexes = self.privateKeysLV.selectedIndexes()
         if selected_indexes:
-            # Assuming you want to get the data of the first selected item
             selected_index = selected_indexes[0]
             selected_item_data = self.privateKeysLV.model().data(selected_index)
             print(selected_item_data)
@@ -85,7 +84,6 @@ class MainWindow(QMainWindow):
     def goToExportPrivateKey(self):
         selected_indexes = self.privateKeysLV.selectedIndexes()
         if selected_indexes:
-            # Assuming you want to get the data of the first selected item
             selected_index = selected_indexes[0]
             selected_item_data = self.privateKeysLV.model().data(selected_index)
             print(selected_item_data)
