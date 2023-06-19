@@ -256,9 +256,10 @@ class SavePrivateKey(QDialog):
             private_keys_lv = main_window.privateKeysLV
             model = private_keys_lv.model()
             print_timestamp = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-
+            selected_algorithm = private_key.algorithm.getAlgorithmCode()
+            selected_algorithm = "RSA" if selected_algorithm == b'\x01' else "ElGamalDSA"
             item = QStandardItem(
-                f"{private_key.name} ({private_key.email})[{private_key.timestamp}, {private_key.algorithm}: {private_key.size}] ID: {repr(private_key.getKeyIdHexString())}"
+                f"{private_key.name} ({private_key.email})[{private_key.timestamp}, {selected_algorithm}: {private_key.size}] ID: {repr(private_key.getKeyIdHexString())}"
             )
             model.appendRow(item)
 
