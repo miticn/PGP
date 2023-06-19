@@ -81,7 +81,7 @@ class MainWindow(QMainWindow):
             private_data = self.privateKeysLV.model().data(private)
             keyId = private_data.split("ID: ")[1].strip("'")
             receiver_key = privateKeyring.getKeyByKeyIdHexString(keyId)
-
+            print(receiver_key.__getstate__())
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
                 receiver_key.exportPublicKeyToFile(file_path)
@@ -281,10 +281,16 @@ class SavePrivateKey(QDialog):
             # Passwords match
             password = self.passwordTB.text().encode()
             timestamp = datetime.now()
-            public_key = RSA.generate(bits)
+            cipher = None
+            print(selected_algorithm)
+            if selected_algorithm == "RSA":
+                public_key = RSA.generate(bits)
+                cipher = RSACipher()
+            elif selected_algorithm == "ElgamalDSA":
+                public_key = ElGamalDSAKey.generate(bits)
+                cipher = ElGamalDSACipher()
 
-            private_key = PrivateKeyWrapper(timestamp, public_key, name, email, RSACipher(), password)
-
+            private_key = PrivateKeyWrapper(timestamp, public_key, name, email, cipher, password)
             privateKeyring.addKey(private_key)
             privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
             # Update the ListView in the MainWindow
@@ -438,20 +444,93 @@ class ReceiveMessage(QDialog):
         self.backButton.clicked.connect(self.back)
         self.browseFileButton.clicked.connect(self.browse_file)
         self.saveFileButton.clicked.connect(self.goToSaveFileAndReturnToMain)
+        self.confirmPasswordBTN.clicked.connect(self.unlockFileClick)
 
         # self.decryptionEmptyLabel.setText('DaLiJeUpsesno')
         # self.verificationLabel.setText('DaLiJeUpsesno')
         
     def browse_file(self):
         file_path, _ = QFileDialog.getOpenFileName(self, "Select File")
-        if file_path:
-            with open(file_path, 'r') as file:
+        self.unlockFile(file_path)
+
+    def unlockFileClick(self):
+        print("unlockFileClick")
+        self.unlockFile(None)
+
+    def unlockFile(self,file_path):
+        self.textBrowser.setText('')
+        if file_path is not None:
+            self.file_path = file_path
+        if self.file_path:
+            with open(self.file_path, 'r') as file:
                 content = file.read()
 
-            msg = Message(content,None,None)
+            try:
+                msg = Message(content,None,None)
+                leave = False
+                
+                if msg.encrypted:
+                    if not self.passwordEdit.isEnabled():
+                        leave = True
+                        self.decryptionEmptyLabel.setText('encrypted')
+                        self.passwordEdit.setEnabled(True)
+                        self.passwordEdit.setText('')
+                        self.confirmPasswordBTN.setEnabled(True)
+                        
+                    #get text form password edit
+                    recKey = privateKeyring.getKeyById(msg.recipientKeyId)
+                    if recKey is None:
+                        self.decryptionEmptyLabel.setText('no private key found')
+                    else:
+                        self.decryptionEmptyLabel.setText('password required')
+                    self.keyForLabel.setText(f"{recKey.name} ({recKey.email}) [{repr(recKey.getKeyIdHexString())}]")
+                    if leave:
+                        return
+                    password = self.passwordEdit.text().encode()
+
+                    msg = Message(content, recKey, password)
+                    if msg.decryptionFailed:
+                        self.decryptionEmptyLabel.setText('decryption failed')
+                        return
+                    else:
+                        self.decryptionEmptyLabel.setText('decrypted')
+                        self.passwordEdit.setEnabled(False)
+                        self.passwordEdit.setText('')
+                        self.confirmPasswordBTN.setEnabled(False)
+                else:
+                    self.decryptionEmptyLabel.setText('not encrypted')
+
+                if msg.signed:
+                    self.verificationEmptyLabel.setText('signed')
+                    verifyMessage, key = msg.verifyMessage(publicKeyring)
+                    if not verifyMessage:
+                        verifyMessage, key = msg.verifyMessage(privateKeyring)
+
+                    if verifyMessage:
+                        self.verificationEmptyLabel.setText('signed and verified')
+                        self.authorEmptyLabel.setText(f"{key.name} ({key.email})")
+                    else:
+                        self.verificationEmptyLabel.setText('signed and not verified')
+                        self.authorEmptyLabel.setText('unknown')
+
+                if msg.zipped:
+                    self.compressionEmptyLabel.setText('compressed')
+                else:
+                    self.compressionEmptyLabel.setText('')
+                if msg.base64:
+                    self.radix64EmptyLabel.setText('base64 encoded')
+                else:
+                    self.radix64EmptyLabel.setText('')
+
+                self.textBrowser.setText(msg.message.decode())
+
+            except:
+                self.decryptionEmptyLabel.setText('failed')
+                self.verificationEmptyLabel.setText('failed')
+                self.authorEmptyLabel.setText('unknown')
+                return
             
             
-            self.textBrowser.setText(msg.message.decode())
 
 
     def goToSaveFileAndReturnToMain(self): 
@@ -460,7 +539,7 @@ class ReceiveMessage(QDialog):
         file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Text Files (*.txt)")
         if file_path:
             with open(file_path, 'w') as file:
-                file.write(self.textEdit.toPlainText())
+                file.write(self.textBrowser.toPlainText())
 
         current_index = widget.currentIndex()
         widget.removeWidget(widget.widget(current_index))

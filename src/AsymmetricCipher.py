@@ -140,7 +140,7 @@ class ElGamalDSAKey:
         DSAKey = DSA.generate(bits, randfunc)
         ElgamalKey = ElGamal.generate(bits,  os.urandom)
 
-        return ElGamalDSAKey(ElgamalKey, DSAKey)
+        return ElGamalDSAKey(ElgamalKey, DSAKey, bits)
 
 
 class ElGamalDSACipher(AsymmetricCipher):

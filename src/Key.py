@@ -115,6 +115,7 @@ class PrivateKeyWrapper(PublicKeyWrapper):
         super().__init__(timestamp, publicKey, name, email, algorithm)
         self.privateKey = privateKey
         self.privateKey = self.__encryptPrivateKey(password)
+        self.size = privateKey.size_in_bits()
 
     
     def __decryptPrivateKey(self, password):

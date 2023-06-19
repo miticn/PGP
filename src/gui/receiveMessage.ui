@@ -16,9 +16,9 @@
   <widget class="QLabel" name="label">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>140</x>
      <y>10</y>
-     <width>281</width>
+     <width>331</width>
      <height>71</height>
     </rect>
    </property>
@@ -34,10 +34,10 @@
   <widget class="QPushButton" name="browseFileButton">
    <property name="geometry">
     <rect>
-     <x>20</x>
-     <y>200</y>
+     <x>320</x>
+     <y>300</y>
      <width>91</width>
-     <height>21</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -47,8 +47,8 @@
   <widget class="QLabel" name="decryptionLabel">
    <property name="geometry">
     <rect>
-     <x>140</x>
-     <y>80</y>
+     <x>40</x>
+     <y>79</y>
      <width>141</width>
      <height>31</height>
     </rect>
@@ -65,9 +65,9 @@
   <widget class="QLabel" name="verificationLabel">
    <property name="geometry">
     <rect>
-     <x>360</x>
-     <y>80</y>
-     <width>131</width>
+     <x>280</x>
+     <y>79</y>
+     <width>141</width>
      <height>31</height>
     </rect>
    </property>
@@ -83,8 +83,8 @@
   <widget class="QLabel" name="decryptionEmptyLabel">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>81</y>
+     <x>190</x>
+     <y>80</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -96,9 +96,9 @@
   <widget class="QLabel" name="verificationEmptyLabel">
    <property name="geometry">
     <rect>
-     <x>500</x>
+     <x>430</x>
      <y>80</y>
-     <width>81</width>
+     <width>131</width>
      <height>31</height>
     </rect>
    </property>
@@ -109,7 +109,7 @@
   <widget class="QLabel" name="label_2">
    <property name="geometry">
     <rect>
-     <x>140</x>
+     <x>40</x>
      <y>120</y>
      <width>71</width>
      <height>21</height>
@@ -127,8 +127,8 @@
   <widget class="QPushButton" name="saveFileButton">
    <property name="geometry">
     <rect>
-     <x>254</x>
-     <y>302</y>
+     <x>450</x>
+     <y>300</y>
      <width>101</width>
      <height>31</height>
     </rect>
@@ -158,11 +158,95 @@
   <widget class="QTextBrowser" name="textBrowser">
    <property name="geometry">
     <rect>
-     <x>135</x>
+     <x>35</x>
      <y>151</y>
-     <width>411</width>
+     <width>521</width>
      <height>131</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="authorEmptyLabel">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>120</y>
+     <width>441</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="compressionEmptyLabel">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>10</y>
+     <width>121</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="radix64EmptyLabel">
+   <property name="geometry">
+    <rect>
+     <x>350</x>
+     <y>10</y>
+     <width>111</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="passwordEdit">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>310</y>
+     <width>113</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="echoMode">
+    <enum>QLineEdit::Password</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="confirmPasswordBTN">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>160</x>
+     <y>310</y>
+     <width>111</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Confirm Password</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="keyForLabel">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>290</y>
+     <width>261</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
    </property>
   </widget>
  </widget>
