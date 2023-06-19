@@ -20,6 +20,13 @@ class Keyring:
         
         return None
     
+    def getKeyByKeyIdHexString(self, keyID):
+        for key in self._keys:
+            if keyID == key.getKeyIdHexString():
+                return key
+        
+        return None
+    
     def isPrivate(self):
         return self._private
     

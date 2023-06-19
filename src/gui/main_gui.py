@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QListWidget, QListWidgetItem
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
 
 
-myPath = ".."
+myPath = "src"
 # Get the absolute path of the project's root directory
 root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -317,16 +317,22 @@ class SendMessage(QDialog):
         sender_key = None
         receiver_key = None
         if isSecret:
-            receiver_key = publicKeyring.getKeyById(self.publicKeyComboBox.currentText().split("ID: ")[1])
+            
+            keyId = self.publicKeyComboBox.currentText().split("ID: ")[1].strip("'")
+            receiver_key = publicKeyring.getKeyByKeyIdHexString(keyId)
+            if receiver_key is None:
+                receiver_key = privateKeyring.getKeyByKeyIdHexString(keyId)
             algo = self.symAlgoComboBox.currentText()
+            print(receiver_key)
             if algo == "TripleDES":
                 algo = TripleDES()
-            elif algo == "AES":
+            elif algo == "AES128":
                 algo = AESCipher()
         
         if isSigned:
             sender_key = privateKeyring.getKeyById(self.privateKeyComboBox.currentText().split("ID: ")[1])
             password = self.passwordTB.text().encode()
+            
 
 
         self.publicKeyComboBox
@@ -338,7 +344,10 @@ class SendMessage(QDialog):
         file_path, _ = QFileDialog.getSaveFileName(self, "Save Message", "", "Text Files (*.txt)")
         if file_path:
             out = msg.createOuputBytes(signed=isSigned, senderKey=sender_key, zipped=isCompressed, base64=isRadix64, encrypted=isSecret, receiverKey=receiver_key, symmetricCipher=algo, password=password)
-            out = out.encode()
+            try:
+                out = out.encode()
+            except:
+                pass
             with open(file_path, 'wb') as file:
                 file.write(out)
 
