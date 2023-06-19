@@ -26,6 +26,9 @@ from SymmetricCipher import AESCipher, TripleDES
 from Key import PrivateKeyWrapper, PublicKeyWrapper
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
+def saveKeyrings():
+    privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+    publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -83,14 +86,14 @@ class MainWindow(QMainWindow):
             private_data = self.privateKeysLV.model().data(private)
             keyId = private_data.split("ID: ")[1].strip("'")
             privateKeyring.removeKeyByKeyIdHexString(keyId)
-            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+            saveKeyrings()
 
         if public:
             public = public[0]
             public_data = self.publicKeysLV.model().data(public)
             keyId = public_data.split("ID: ")[1].strip("'")
             publicKeyring.removeKeyByKeyIdHexString(keyId)
-            publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+            saveKeyrings()
         
         self.listKeys()
 
@@ -164,13 +167,13 @@ class MainWindow(QMainWindow):
                         privateKeyring.addKey(private)
                         #load password here
                         password = b'123'
-                        privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", password)
+                        saveKeyrings()
                         self.listKeys()
                 else:
                     status, public = PublicKeyWrapper.importPublicKeyFromFile(file_path)
                     if status:
                         publicKeyring.addKey(public)
-                        publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+                        saveKeyrings()
                         self.listKeys()
 
 
@@ -339,7 +342,7 @@ class SavePrivateKey(QDialog):
 
             private_key = PrivateKeyWrapper(timestamp, public_key, name, email, cipher, password)
             privateKeyring.addKey(private_key)
-            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
+            saveKeyrings()
             # Update the ListView in the MainWindow
             main_window = widget.widget(1)  # Assuming MainWindow is at index 0
             private_keys_lv = main_window.privateKeysLV
@@ -626,8 +629,7 @@ class FirstWindow(QMainWindow):
             publicKeyring = Keyring(False)
             
             # Save in files
-            privateKeyring.saveToFile(myPath+"/Ring/private_keyring.bin", keyring_password)
-            publicKeyring.saveToFile(myPath+"/Ring/public_keyring.bin", keyring_password)
+            saveKeyrings()
 
             main_window = MainWindow()
             widget.addWidget(main_window)
@@ -648,6 +650,7 @@ class FirstWindow(QMainWindow):
             self.errorLabel.setText("Wrong password")
             self.errorLabel.setStyleSheet("color: red;")
         else:
+            keyring_password = entered_password
             main_window = MainWindow()
             widget.addWidget(main_window)
             widget.setCurrentIndex(widget.currentIndex() + 1)
@@ -663,7 +666,7 @@ if __name__ == "__main__":
     # Initializing keyrings
     privateKeyring = None
     publicKeyring = None
-    keyring_password = b'1234'
+    keyring_password = b''
     app = QApplication(sys.argv)
 
     app.setApplicationDisplayName("PGP Mitic-Davidovic")
