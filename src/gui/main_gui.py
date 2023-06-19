@@ -151,17 +151,14 @@ class MainWindow(QMainWindow):
 
             file_path, _ = QFileDialog.getSaveFileName(self, "Save a File", "", "Pem Format (*.pem)")
             if file_path:
-<<<<<<< HEAD
                 password = b'123'
    
-                enterPassword = EnterPassword(receiver_key)
+                enterPassword = EnterPassword(receiver_key, file_path)
                 widget.addWidget(enterPassword)
                 widget.setCurrentIndex(widget.currentIndex() + 1)
 
-=======
-                password = b'1'
->>>>>>> ad1cef1e3f2040c4a3e3d77513edca48656f488a
-                receiver_key.exportPrivateKeyToFile(file_path, password)
+
+                
 
         else:
             print("No item selected")
@@ -252,7 +249,7 @@ class GenerateNewKey(QDialog):
 
 
 class EnterPassword(QDialog):
-    def __init__(self, receiver_key):
+    def __init__(self, receiver_key, file_path):
         super(EnterPassword, self).__init__()
 
         ui_file = os.path.join(script_dir, "enterPassword.ui")
@@ -260,6 +257,7 @@ class EnterPassword(QDialog):
 
         self.UiComponents()
         self.receiver_key = receiver_key
+        self.file_path = file_path
 
     # Method for widgets
     def UiComponents(self):
@@ -269,13 +267,17 @@ class EnterPassword(QDialog):
 
     # Action method
     def goToShowPrivateKeyring(self):
+        print(self.receiver_key)
         if self.passwordTB.text().strip() == "":
             self.errorLabel.setText("You must enter password.")
             self.errorLabel.setStyleSheet("color: red;")
+        
         elif self.receiver_key.checkPassword(self.passwordTB.text().encode()):
             # Go back one level at the end
+            print("Password is correct")
             current_index = widget.currentIndex()
             widget.removeWidget(widget.widget(current_index))
+            self.receiver_key.exportPrivateKeyToFile(self.file_path, self.passwordTB.text().encode())
 
     def back(self): 
         current_index = widget.currentIndex()
