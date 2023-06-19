@@ -36,8 +36,8 @@ class MainWindow(QMainWindow):
         # Keys
         self.actionGenerate_new_Key.triggered.connect(self.goToGenerateNewKey)
         # self.actionRemove_existing_Key.triggered.connect(self.goToRemoveExistingKey)
-        # self.actionImport_Key_2.triggered.connect(self.goToImportKey)
-        # self.actionExport_Key_2.triggered.connect(self.goToExportKey)
+        self.exportPublicKeyMenuBar.triggered.connect(self.goToExportPublicKey)
+        self.exportPrivateKeyMenuBar.triggered.connect(self.goToExportPrivateKey)
 
         # Messages
         self.actionSend_Message.triggered.connect(self.goToSendMessage)
@@ -71,6 +71,26 @@ class MainWindow(QMainWindow):
         widget.addWidget(receiveMessage)
         widget.setCurrentIndex(widget.currentIndex() + 1)
 
+
+    def goToExportPublicKey(self):
+        selected_indexes = self.privateKeysLV.selectedIndexes()
+        if selected_indexes:
+            # Assuming you want to get the data of the first selected item
+            selected_index = selected_indexes[0]
+            selected_item_data = self.privateKeysLV.model().data(selected_index)
+            print(selected_item_data)
+        else:
+            print("No item selected")
+
+    def goToExportPrivateKey(self):
+        selected_indexes = self.privateKeysLV.selectedIndexes()
+        if selected_indexes:
+            # Assuming you want to get the data of the first selected item
+            selected_index = selected_indexes[0]
+            selected_item_data = self.privateKeysLV.model().data(selected_index)
+            print(selected_item_data)
+        else:
+            print("No item selected")
 
 
 

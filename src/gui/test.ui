@@ -96,7 +96,8 @@
     <addaction name="actionRemove_existing_Key"/>
     <addaction name="separator"/>
     <addaction name="actionImport_Key_2"/>
-    <addaction name="actionExport_Key_2"/>
+    <addaction name="exportPrivateKeyMenuBar"/>
+    <addaction name="exportPublicKeyMenuBar"/>
     <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuMessages">
@@ -138,9 +139,9 @@
     <string>Import Key</string>
    </property>
   </action>
-  <action name="actionExport_Key_2">
+  <action name="exportPublicKeyMenuBar">
    <property name="text">
-    <string>Export Key</string>
+    <string>Export Public Key</string>
    </property>
   </action>
   <action name="actionSend_Message">
@@ -156,6 +157,11 @@
   <action name="actionShow_Keyrings">
    <property name="text">
     <string>Show Keyrings</string>
+   </property>
+  </action>
+  <action name="exportPrivateKeyMenuBar">
+   <property name="text">
+    <string>Export Private Key</string>
    </property>
   </action>
  </widget>
